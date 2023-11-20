@@ -1,0 +1,14 @@
+version: '3'
+services:
+  web-app:
+    build:
+      context: ./web-app
+      dockerfile: dockerfile.web
+    ports:
+      - "5001:5000"
+  ml-client:
+    build:
+      context: ./machine-learning-client
+      dockerfile: dockerfile.ml
+
+
