@@ -14,4 +14,3 @@ def call_ml_client(data):
     response = requests.post('http://ml-client:5002/process', json=data, timeout=10)
     return response.json()
 
-# Newline
