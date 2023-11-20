@@ -11,5 +11,7 @@ def index():
 
 def call_ml_client(data):
     """Description of what the function does."""
-    response = requests.post('http://ml-client:5002/process', json=data)
+    response = requests.post('http://ml-client:5002/process', json=data, timeout=10)
     return response.json()
+
+# Newline
