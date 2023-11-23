@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>EchoComposer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet", type="text/css", href="../static/style.css">
+</head>
+
+<body>
+    <div class="upload-section">
+        <h1><b>EchoComposer</b></h1>
+
+        <div id="generation-container" class="button-container">
+            <button class="button" id="record" title="record" onclick=""><i class="material-icons">radio_button_checked</i></button>
+            <button class="button" id="play" title="play" onclick="" disabled><i class="material-icons"></i>play_arrow</button>
+            <button class="button" id="stop" title="stop" onclick="" disabled><i class="material-icons">stop</i></button>
+            <button class="button" id="save" title="save" onclick="" disabled><i class="material-icons">download</i></button>
+            <label class="button" id="fileBtn" title="upload midi">
+              <i class="material-icons">upload_file</i>
+              <input type="file" id="fileInput" multiple>
+          </label>
+          <button class="button" title="information" onclick=""><i class="material-icons">info</i></button>
+        </div>
+        
+        <div class="visualizer-container">
+            <svg id="vizSample"></svg>
+        </div>
+
+        <div id="notification" class="notification-hidden">
+            <p id="notification-text"></p>
+        </div>
+        
+        <div id="detectedNotesDisplay" class="notes-display-hidden">
+            <p id="detectedNotesText"></p>
+        </div>
+        
+        <div id="loadingIndicator" class="hidden">Loading...</div>
+
+        <div id="modal-background" onclick="" style="display: none;">
+          <div id="description-container" onclick="event.stopPropagation();">
+              
+              <h3>Instructions</h3>
+              <button onclick="" class="close-btn"><i class="material-icons">close</i></button>
+              <ul>
+                  <li><i class="material-icons">radio_button_checked</i> Record your MIDI Notes</li>
+                  <li><i class="material-icons">play_arrow</i> Plays the seqeuence</li>
+                  <li><i class="material-icons">stop</i> Stops the sequence</li>
+                  <li><i class="material-icons">download</i> Saves note sequence to a .mid file</li>
+                  <li><i class="material-icons">upload_file</i> Uploads a midi file for manipulation</li>
+              </ul>
+          </div>
+        </div>
+    </div>
+</body>
+</html>
