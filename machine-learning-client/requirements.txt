@@ -2,3 +2,6 @@ crepe
 numpy==1.19.5
 scipy==1.6.2
 librosa==0.8.0
+pyaudio
+madmom==0.16.1
+mido==1.26.0

@@ -14,7 +14,11 @@
         <div class="upload-section">  
             
             <div class="login-btn">
-                <button class="button" id="login" title="login" onclick="">Login</button>
+                <a href="{{url_for('login')}}"><button class="button" id="login" title="login">Login</button></a>
+            </div>
+
+            <div class="login-btn">
+                <a href="{{url_for('logout')}}"><button class="button" id="logout" title="logout">Log Out</button></a>
             </div>
             
             <div class="visualizer-container">
