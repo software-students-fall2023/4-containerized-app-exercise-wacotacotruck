@@ -12,11 +12,7 @@ crepe = "*"
 numpy = "*"
 scipy = "*"
 librosa = "*"
-flask-cors = "*"
-pretty_midi = "*"
-pymongo = "*"
-dotenv = "*"
-flask_session = "*"
+Flask-Cors = "*"
 
 [dev-packages]
 
