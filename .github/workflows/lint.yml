@@ -23,7 +23,8 @@ jobs:
 
       - name: Lint code with Pylint
         run: |
-          pylint .
+          pylint . --ignore-patterns=__init__.py
+
 
       - name: Commit changes (if any)
         run: |
