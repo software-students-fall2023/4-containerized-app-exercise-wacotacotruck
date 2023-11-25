@@ -2,10 +2,10 @@
 import os
 from flask import Flask, url_for, redirect, render_template, session, request
 import requests
-from flask_session import Session
 from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
+from flask_session import Session
 
 # Initializes Flask application and loads the .env file from the MongoDB Atlas Database
 app = Flask(__name__)
@@ -113,9 +113,7 @@ def login():
     """Renders the login page"""
     if 'user_id' in session:
         return redirect(url_for('index'))
-
-    else:
-        return render_template('login.html')
+    return render_template('login.html')
 
 # This function is the backend of the login functionality from the login.html file
 @app.route('/login_auth', methods=['POST'])
