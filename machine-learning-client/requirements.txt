@@ -1,7 +1,9 @@
 crepe
-numpy==1.19.5
-scipy==1.6.2
-librosa==0.8.0
-pyaudio
-madmom==0.16.1
-mido==1.26.0
+pretty_midi
+Flask==2.0.1
+Werkzeug==2.0.1
+Flask-Cors==3.0.10
+soundfile 
+numpy
+ffmpeg
+tensorflow 

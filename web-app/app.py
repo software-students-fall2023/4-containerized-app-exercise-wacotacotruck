@@ -40,7 +40,7 @@ def index():
 
 def call_ml_client(data):
     """Description of what the function does."""
-    response = requests.post("http://ml-client:5002/process", json=data, timeout=10)
+    response = requests.post("http://localhost:5002/process", json=data, timeout=10)
     return response.json()
 
 # This is the function which registers the signup page from the login.html page if the user does click it

@@ -26,7 +26,8 @@
             </div>
 
             <div id="control-container" class="button-container">
-                <button class="button" id="record" title="record" onclick=""><i class="material-icons">radio_button_checked</i></button>
+                <button class="button" id="record" title="record" onclick="startRecording(); this.disabled = true; document.getElementById('stop').disabled = false;"><i class="material-icons">radio_button_checked</i></button>
+                <button class="button" id="stop" title="stop" onclick="stopRecording(); this.disabled = true; document.getElementById('record').disabled = false;" disabled><i class="material-icons">stop</i></button>
                 <button class="button" id="play" title="play" onclick="" disabled><i class="material-icons">play_arrow</i></button>
                 <button class="button" id="stop" title="stop" onclick="" disabled><i class="material-icons">stop</i></button>
                 <button class="button" id="save" title="save" onclick="" disabled><i class="material-icons">download</i></button>
@@ -61,5 +62,6 @@
                 </div>
             </div>
         </div>
+        <script src="../static/script.js"></script>
     </body>
 </html>
