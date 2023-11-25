@@ -27,8 +27,7 @@ jobs:
       - name: Lint with pylint
         if: ${{ hashFiles('**/*.py') }}
         run: |
-          find . -name "*.py" | xargs pipenv install --skip-lock  # Install dependencies listed in Pipfile.lock
-          pipenv run pylint
+          find . -name "*.py" | xargs pipenv run pylint
       
       - name: Format with black
         if: ${{ hashFiles('**/*.py') }}
