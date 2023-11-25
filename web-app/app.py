@@ -15,58 +15,60 @@ load_dotenv()
 # Secret key is essential for the proper functioning of user sessions in your Flask application.
 # Used when users sign into their account, it creates a private session for them (security reasons)
 sess = Session()
-app.secret_key = os.getenv('APP_SECRET_KEY')
-app.config['SESSION_TYPE'] = 'filesystem'
+app.secret_key = os.getenv("APP_SECRET_KEY")
+app.config["SESSION_TYPE"] = "filesystem"
 sess.init_app(app)
 
 # Establish a database connection with the MONGO_URI (MongoDB Atlas connection)
-client = MongoClient(os.getenv('MONGO_URI'))
+client = MongoClient(os.getenv("MONGO_URI"))
 
 # Checks if the connection has been made, else make an error printout
 try:
-    client.admin.command('ping')
-    database = client[os.getenv('MONGO_DBNAME')]
-    print('* Connected to MongoDB!')
+    client.admin.command("ping")
+    database = client[os.getenv("MONGO_DBNAME")]
+    print("* Connected to MongoDB!")
 
 except ConnectionError as err:
-    print('* "Failed to connect to MongoDB at', os.getenv('MONGO_URI'))
-    print('Database connection error:', err)
+    print('* "Failed to connect to MongoDB at', os.getenv("MONGO_URI"))
+    print("Database connection error:", err)
+
 
 # Routes
 @app.route("/")
 def index():
     """Renders the home page"""
-    return render_template('index.html')
+    return render_template("index.html")
+
 
 def call_ml_client(data):
     """Contacts the ml client"""
     response = requests.post("http://localhost:5002/process", json=data, timeout=10)
     return response.json()
 
+
 # This is the function which registers the signup page from the login.html page
-@app.route('/signup', methods=['GET', 'POST'])
+@app.route("/signup", methods=["GET", "POST"])
 def signup():
     """Renders the signup page"""
     # If there is a user_id in session, it redirects them back to the home page
-    if 'user_id' in session:
-        return redirect(url_for('index'))
+    if "user_id" in session:
+        return redirect(url_for("index"))
 
     # If there is no account, then we allow the user to creat one.
-    if request.method == 'POST':
-
+    if request.method == "POST":
         # We allow the user to create their username, password, confirm password, email
-        username = request.form['username']
-        password = request.form['password']
-        confirm_password = request.form['confirm_password']
-        email = request.form['email']
+        username = request.form["username"]
+        password = request.form["password"]
+        confirm_password = request.form["confirm_password"]
+        email = request.form["email"]
         errors = []
 
         # This checks if there is already a user that has this exact username
-        if database.users.find_one({'username': username}):
+        if database.users.find_one({"username": username}):
             errors.append("Username already exists!")
 
         # This checks if there is already a user that has this exact email
-        if database.users.find_one({'email': email}):
+        if database.users.find_one({"email": email}):
             errors.append("Email already used, try another or try logging in!")
 
         # This checks if the password is in between 8-20 characters
@@ -87,74 +89,79 @@ def signup():
 
         # If any errors, it will re-render the signup.html page and allow the user to try again
         if errors:
-            return render_template('signup.html', errors=errors)
+            return render_template("signup.html", errors=errors)
 
         # If user managed to create a proper account, it will generate a hash for their password
         password_hash = generate_password_hash(password)
 
         # Here we insert their account details to the database
-        collection = database['users']
-        collection.insert_one({
-            'username': username,
-            'password': password_hash,
-            'email': email,
-            'midi_files': []
-        })
+        collection = database["users"]
+        collection.insert_one(
+            {
+                "username": username,
+                "password": password_hash,
+                "email": email,
+                "midi_files": [],
+            }
+        )
 
         # This redirects the user to the login page where they must login to access the webpage.
-        return redirect(url_for('login'))
+        return redirect(url_for("login"))
 
     # Renders the signup.html page
-    return render_template('signup.html')
+    return render_template("signup.html")
+
 
 # Rendering either the login template if they haven't logged in, otherwise, the home page
-@app.route('/login', methods=['GET'])
+@app.route("/login", methods=["GET"])
 def login():
     """Renders the login page"""
-    if 'user_id' in session:
-        return redirect(url_for('index'))
-    return render_template('login.html')
+    if "user_id" in session:
+        return redirect(url_for("index"))
+    return render_template("login.html")
+
 
 # This function is the backend of the login functionality from the login.html file
-@app.route('/login_auth', methods=['POST'])
+@app.route("/login_auth", methods=["POST"])
 def login_auth():
     """Route for login authentication"""
     # If a user is already logged in, redirect them to the home page
-    if 'user_id' in session:
-        return redirect(url_for('index'))
+    if "user_id" in session:
+        return redirect(url_for("index"))
 
     # Else, ask them to login by inputting a username and password
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        session['username'] = username
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        session["username"] = username
 
         errors = []
 
         # Once inputted their username and password, check the database for existing users
-        user = database.users.find_one({'username': username})
+        user = database.users.find_one({"username": username})
 
         # We provide the _id attribute of the user to the user_id in the session
-        if user and check_password_hash(user['password'], password):
+        if user and check_password_hash(user["password"], password):
             # User sessions to keep track of who's logged in
-            session['user_id'] = str(user['_id'])
-            return redirect(url_for('index'))
+            session["user_id"] = str(user["_id"])
+            return redirect(url_for("index"))
 
         # If the username or password does not match we render the login.html template once more
         errors.append("Invalid username or password!")
-        return render_template('login.html', errors=errors)
+        return render_template("login.html", errors=errors)
     return None
 
-@app.route('/forgot_password', methods=['GET', 'POST'])
+
+@app.route("/forgot_password", methods=["GET", "POST"])
 def forgot_password():
     """Renders the forgot password page"""
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        confirm_password = request.form['confirm_password']
-        email = request.form['email']
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        confirm_password = request.form["confirm_password"]
+        email = request.form["email"]
         errors = []
-        user = database.users.find_one({'email': email, 'username':username})
+        user = database.users.find_one({"email": email, "username": username})
 
         if not user:
             errors.append("Invalid username or email!")
@@ -172,5 +179,5 @@ def forgot_password():
             errors.append("Passwords do not match!")
 
         if errors:
-            return render_template('forgot_password.html', errors=errors)
+            return render_template("forgot_password.html", errors=errors)
     return None
