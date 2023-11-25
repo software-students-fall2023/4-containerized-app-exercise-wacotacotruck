@@ -18,7 +18,6 @@ pymongo = "*"
 dotenv = "*"
 flask_session = "*"
 
-
 [dev-packages]
 
 [requires]
