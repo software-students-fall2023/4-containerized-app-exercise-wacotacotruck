@@ -31,20 +31,31 @@ function sendAudioToServer(audioBlob) {
     formData.append("audio", audioBlob, "recording.webm");
 
     fetch("http://localhost:5002/process", {
-    method: "POST",
-    body: formData
+        method: "POST",
+        body: formData
     })
     .then(response => {
-    if (!response.ok) {
-        throw new Error(`Server returned status: ${response.status}`);
-    }
-    return response.json();
+        if (!response.ok) {
+            throw new Error(`Server returned status: ${response.status}`);
+        }
+        return response.json();
     })
     .then(data => {
-    console.log("Server response:", data);
+        console.log("Server response:", data);
+        displayMidiLink(data.midi_url);
     })
     .catch(error => {
-    console.error("Error sending audio data to the server: ", error);
+        console.error("Error sending audio data to the server: ", error);
     });
+}
 
+function displayMidiLink(midiUrl) {
+    const linkContainer = document.getElementById('detectedNotesDisplay');
+    linkContainer.innerHTML = ''; 
+    const link = document.createElement('a');
+    link.href = midiUrl;
+    link.textContent = 'Download MIDI File';
+    link.download = 'processed_midi.mid'; 
+    linkContainer.appendChild(link);
+    linkContainer.classList.remove('notes-display-hidden');
 }
