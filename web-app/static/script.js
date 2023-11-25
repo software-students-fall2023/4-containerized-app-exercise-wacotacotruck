@@ -1,5 +1,6 @@
 let mediaRecorder;
 let audioChunks = [];
+let isRecording = false;
 
 function startRecording() {
   navigator.mediaDevices
@@ -62,14 +63,33 @@ function displayMidiLink(midiUrl) {
 }
 
 // Function to handle description button
-// function toggleDescription() {
-//   const modalBackground = document.getElementById("modal-background");
-//   if (
-//     modalBackground.style.display === "none" ||
-//     !modalBackground.style.display
-//   ) {
-//     modalBackground.style.display = "flex";
-//   } else {
-//     modalBackground.style.display = "none";
-//   }
-// }
+function toggleDescription() {
+  const modalBackground = document.getElementById("modal-background");
+  if (
+    modalBackground.style.display === "none" ||
+    !modalBackground.style.display
+  ) {
+    modalBackground.style.display = "flex";
+  } else {
+    modalBackground.style.display = "none";
+  }
+}
+
+function toggleRecording() {
+  const recordButton = document.getElementById('recordButton');
+  const recordIcon = document.getElementById('recordIcon');
+
+  if (!isRecording) {
+      startRecording();
+      recordButton.title = "Stop Recording";
+      recordIcon.textContent = "stop";
+      recordButton.classList.add('recording');
+  } else {
+      stopRecording();
+      recordButton.title = "Start Recording";
+      recordIcon.textContent = "fiber_manual_record";
+      recordButton.classList.remove('recording');
+  }
+
+  isRecording = !isRecording;
+}
