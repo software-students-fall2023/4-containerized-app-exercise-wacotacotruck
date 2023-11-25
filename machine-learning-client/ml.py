@@ -30,12 +30,12 @@ def process_data():
         wav_file = 'temp_recording.wav'
         with open(webm_file, 'wb') as file:
             file.write(request.files['audio'].read())
-        result = subprocess.run(['ffmpeg', '-i', webm_file, wav_file], 
+        result = subprocess.run(['ffmpeg', '-i', webm_file, wav_file],
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
         if result.returncode != 0:
             print("ffmpeg error:", result.stderr.decode())
             raise ValueError("Error converting WebM to WAV")
-        audio, sr = sf.read(wav_file)        
+        audio, sr = sf.read(wav_file)
         # logging.info(f"Audio data type: {audio.dtype}, Sample rate: {sr}")
         confidence_threshold = 0.74
         chunk_size = 1024 * 10
@@ -49,7 +49,7 @@ def process_data():
             for t, f, c in zip(time, frequency, confidence, activation):
                 if c >= confidence_threshold:
                     note_name = frequency_to_note_name(f)
-                    notes_data.append({"time": float(t), "note": note_name, 
+                    notes_data.append({"time": float(t), "note": note_name,
                                         "confidence": round(float(c), 2)})
 
         notes_data_sorted = sorted(notes_data, key=lambda x: x['time'])

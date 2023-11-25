@@ -43,7 +43,7 @@ def call_ml_client(data):
     response = requests.post("http://localhost:5002/process", json=data, timeout=10)
     return response.json()
 
-# This is the function which registers the signup page from the login.html page if the user does click it
+# This is the function which registers the signup page from the login.html page
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     """Renders the signup page"""
@@ -104,11 +104,11 @@ def signup():
 
             # This redirects the user to the login page where they must login to access the webpage.
             return redirect(url_for('login'))
- 
+
         # Renders the signup.html page
         return render_template('signup.html')
 
-# This function is for rendering either the login.html template if they haven't logged in and if they have, then we render the home page
+# Rendering either the login template if they haven't logged in, otherwise, the home page
 @app.route('/login', methods=['GET'])
 def login():
     """Renders the login page"""
@@ -139,7 +139,7 @@ def login_auth():
             user = database.users.find_one({'username': username})
 
             # We provide the _id attribute of the user to the user_id in the session
-            if user and check_password_hash(user['password'], password):    
+            if user and check_password_hash(user['password'], password):
                 # User sessions to keep track of who's logged in
                 session['user_id'] = str(user['_id'])
                 return redirect(url_for('index'))
