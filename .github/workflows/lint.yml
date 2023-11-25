@@ -1,30 +1,30 @@
-name: Lint Check
+name: Code Formatting and Linting
 on: [push, pull_request]
 
 jobs:
-  lint:
+  format_and_lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
+
       - name: Install dependencies
-        if: ${{ hashFiles('Pipfile.lock') }}
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pipenv
-          pipenv install --dev
-      - name: Install runtime dependencies
-        if: ${{ hashFiles('Pipfile.lock') }}
+          python -m pip install black pylint
+
+      - name: Format code with Black
         run: |
-          pipenv install --ignore-pipfile
-      - name: Lint with pylint
-        if: ${{ hashFiles('**/*.py') }}
+          black .
+
+      - name: Lint code with Pylint
         run: |
-          find . -name "*.py" | xargs pipenv run pylint
-      - name: Format with black
-        if: ${{ hashFiles('**/*.py') }}
+          pylint .
+
+      - name: Commit changes (if any)
         run: |
-          pipenv run black --diff --check .
+          git diff --exit-code || (git config user.name "GitHub Actions" && git config user.email "actions@github.com" && git commit -am "Format code with Black" && git push)
