@@ -23,13 +23,13 @@ jobs:
         if: ${{ hashFiles('Pipfile.lock') }}
         run: |
           pipenv install --ignore-pipfile
-
-      - name: Format with black
-        if: ${{ hashFiles('**/*.py') }}
-        run: |
-          pipenv run black --diff --check .
       
       - name: Lint with pylint
         if: ${{ hashFiles('**/*.py') }}
         run: |
           find . -name "*.py" | xargs pipenv run pylint
+      
+      - name: Format with black
+        if: ${{ hashFiles('**/*.py') }}
+        run: |
+          pipenv run black --diff --check .
