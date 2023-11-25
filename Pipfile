@@ -1,0 +1,25 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+pylint = "*"
+black = "*"
+flask = "*"
+requests = "*"
+crepe = "*"
+numpy = "*"
+scipy = "*"
+librosa = "*"
+Flask-Cors = "*"
+pretty_midi = "*"
+pymongo = "*"
+dotenv = "*"
+flask_session = "*"
+
+
+[dev-packages]
+
+[requires]
+python_version = "3.10"
