@@ -1,19 +1,19 @@
 """Web-app."""
-from flask import Flask, url_for, redirect, render_template, make_response, session, request, jsonify, abort
-import requests
 import os
+from flask import Flask, url_for, redirect, render_template, session, request
+import requests
 from flask_session import Session
 from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
-from dotenv import load_dotenv 
+from dotenv import load_dotenv
 
-# Initializes the flask application and loads the .env file to retreive information from the MongoDB Atlas Database
+# Initializes flask application and loads the .env file from the MongoDB Atlas Database
 app = Flask(__name__)
 load_dotenv()
 
-# This is to monitor Flask's session management. Flask uses a secret key to sign and encrypt session data to prevent tampering and ensure security. 
-# This secret key is essential for the proper functioning of user sessions in your Flask application.
-# This is essentially when users sign into their account, it simply creates a private session for them (for security and privacy reasons)
+# Monitors Flask's session management: Uses a secret key to sign and encrypt session data
+# Secret key is essential for the proper functioning of user sessions in your Flask application.
+# Used when users sign into their account, it creates a private session for them (security reasons)
 sess = Session()
 app.secret_key = os.getenv('APP_SECRET_KEY')
 app.config['SESSION_TYPE'] = 'filesystem'
@@ -24,13 +24,13 @@ client = MongoClient(os.getenv('MONGO_URI'))
 
 # Checks if the connection has been made, else make an error printout
 try:
-    client.admin.command('ping')          
-    database = client[os.getenv('MONGO_DBNAME')]          
-    print('* Connected to MongoDB!')         
+    client.admin.command('ping')
+    database = client[os.getenv('MONGO_DBNAME')]
+    print('* Connected to MongoDB!')
 
 except Exception as err:
     print('* "Failed to connect to MongoDB at', os.getenv('MONGO_URI'))
-    print('Database connection error:', err) 
+    print('Database connection error:', err)
 
 # Routes
 @app.route("/")
@@ -50,8 +50,8 @@ def signup():
     if 'user_id' in session:
         return redirect(url_for('index'))
     
-    # If there is no account, then we allow the user to creat one. 
-    else: 
+    # If there is no account, then we allow the user to creat one.
+    else:
         if request.method == 'POST':
 
             # We allow the user to create their username, password, confirm password, email
