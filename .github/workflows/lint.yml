@@ -1,4 +1,4 @@
-name: check lint and format
+name: Lint Check
 on: [push, pull_request]
 
 jobs:
@@ -11,17 +11,20 @@ jobs:
         with:
           python-version: "3.10"
       - name: Install dependencies
-        if: ${{ hashFiles('**/*.py') != '' }}
+        if: ${{ hashFiles('Pipfile.lock') }}
         run: |
           python -m pip install --upgrade pip
           python -m pip install pipenv
-          pipenv sync --dev --python $(which python)
-          pipenv shell --fancy --python $(which python)
-      - name: Lint with pylint
-        if: ${{ hashFiles('**/*.py') != '' }}
+          pipenv install --dev
+      - name: Install runtime dependencies
+        if: ${{ hashFiles('Pipfile.lock') }}
         run: |
-          pipenv run pylint **/*.py
+          pipenv install --ignore-pipfile
+      - name: Lint with pylint
+        if: ${{ hashFiles('**/*.py') }}
+        run: |
+          find . -name "*.py" | xargs pipenv run pylint
       - name: Format with black
-        if: ${{ hashFiles('**/*.py') != '' }}
+        if: ${{ hashFiles('**/*.py') }}
         run: |
           pipenv run black --diff --check .
