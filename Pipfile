@@ -13,6 +13,10 @@ numpy = "*"
 scipy = "*"
 librosa = "*"
 Flask-Cors = "*"
+pymongo = "*"
+python-dotenv = "*"
+flask-session = "*"
+pretty-midi = "*"
 
 [dev-packages]
 
