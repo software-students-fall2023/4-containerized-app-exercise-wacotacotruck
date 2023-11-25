@@ -27,7 +27,8 @@ jobs:
       - name: Lint with pylint
         if: ${{ hashFiles('**/*.py') }}
         run: |
-          find . -name "*.py" | xargs pipenv run pylint
+          pipenv shell
+          find . -name "*.py" | xargs pylint
       
       - name: Format with black
         if: ${{ hashFiles('**/*.py') }}
