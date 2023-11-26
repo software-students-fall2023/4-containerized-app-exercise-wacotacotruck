@@ -17,6 +17,7 @@ pymongo = "*"
 python-dotenv = "*"
 flask-session = "*"
 pretty-midi = "*"
+pytest = "*"
 
 [dev-packages]
 
