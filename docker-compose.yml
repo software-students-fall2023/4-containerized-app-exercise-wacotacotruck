@@ -13,6 +13,10 @@ services:
     ports:
       - "5002:5002"
     volumes:
-    - ./machine-learning-client:/machine-learning-client
-
-
+      - ./machine-learning-client:/machine-learning-client
+  db: 
+    image: mongo:4.0-xenial
+    ports: 
+      - "27017:27017"
+    volumes: 
+      - ./db:/data/db 

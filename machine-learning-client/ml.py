@@ -25,6 +25,8 @@ def frequency_to_note_name(frequency):
         return None
     frequency = float(frequency)
     note_number = pretty_midi.hz_to_note_number(frequency)
+
+    print(note_number)
     return pretty_midi.note_number_to_name(int(note_number))
 
 
@@ -304,15 +306,21 @@ def filter_and_combine_notes(notes_data, minimum_note_duration=0.1):
 def detect_note_onsets(audio_file):
     y, sr = librosa.load(audio_file, sr=None)
     onsets = librosa.onset.onset_detect(y=y, sr=sr, units='time')
+
+    print(onsets)
     return onsets
 
 def estimate_note_durations(onsets, audio_length):
     durations = np.diff(onsets, append=audio_length)
+
+    print(durations)
     return durations
 
 def estimate_tempo(audio_file):
     y, sr = librosa.load(audio_file, sr=None)
     tempo, _ = librosa.beat.beat_track(y, sr=sr)
+
+    print(tempo)
     return tempo
 
 def create_midi(filtered_notes, onsets, durations, tempo, output_file='output.mid'):
