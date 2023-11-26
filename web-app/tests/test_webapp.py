@@ -1,6 +1,7 @@
 """Module for Testing Python Functions"""
 import pytest
 
+
 class Tests:
     """Test Functions for the Web App"""
 
