@@ -9,24 +9,22 @@
     </head>
 
     <body>
+        <div class="auth-buttons">
+            <a href="{{url_for('login')}}"><button class="button" id="login" title="login">Login</button></a>
+            <a href="{{url_for('logout')}}"><button class="button" id="logout" title="logout">Logout</button></a>
+        </div>
+        
         <h1><b><center>Sing & Sync</center></b></h1>
         <div class="upload-section">  
-            
-            <div class="login-btn">
-                <a href="{{url_for('login')}}"><button class="button" id="login" title="login">Login</button></a>
-            </div>
-
-            <div class="login-btn">
-                <a href="{{url_for('logout')}}"><button class="button" id="logout" title="logout">Log Out</button></a>
-            </div>
             
             <div class="visualizer-container">
                 <svg id="vizSample"></svg>
             </div>
 
             <div id="control-container" class="button-container">
-                <button class="button" id="record" title="record" onclick="startRecording(); this.disabled = true; document.getElementById('stop').disabled = false;"><i class="material-icons">radio_button_checked</i></button>
-                <button class="button" id="stop" title="stop" onclick="stopRecording(); this.disabled = true; document.getElementById('record').disabled = false;" disabled><i class="material-icons">stop</i></button>
+                <button class="button" id="recordButton" title="Start Recording" onclick="toggleRecording();">
+                    <i class="material-icons" id="recordIcon">fiber_manual_record</i>
+                </button>
                 <button class="button" id="play" title="play" onclick="" disabled><i class="material-icons">play_arrow</i></button>
                 <button class="button" id="stop" title="stop" onclick="" disabled><i class="material-icons">stop</i></button>
                 <button class="button" id="save" title="save" onclick="" disabled><i class="material-icons">download</i></button>

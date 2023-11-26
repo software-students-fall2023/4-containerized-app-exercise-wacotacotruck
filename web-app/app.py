@@ -27,10 +27,12 @@ try:
     client.admin.command("ping")
     database = client[os.getenv("MONGO_DBNAME")]
     print("* Connected to MongoDB!")
-
 except ConnectionError as err:
     print('* "Failed to connect to MongoDB at', os.getenv("MONGO_URI"))
     print("Database connection error:", err)
+# except Exception as err:
+#     print('* "Failed to connect to MongoDB at', os.getenv("MONGO_URI"))
+#     print("Database connection error:", err)
 
 
 # Routes
@@ -181,3 +183,17 @@ def forgot_password():
         if errors:
             return render_template("forgot_password.html", errors=errors)
     return None
+
+
+# Here we have another route, if the user decides to logout,
+# it will pop their user_id from the session and redirect them to the login page
+@app.route("/logout")
+def logout():
+    """route for logout"""
+    session.pop("user_id", None)
+    return redirect(url_for("login"))
+
+
+# Executing the Flask Application:
+if __name__ == "__main__":
+    app.run(debug=True)
