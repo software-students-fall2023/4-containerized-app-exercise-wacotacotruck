@@ -11,7 +11,7 @@ class Tests:
 
     # Test functions
     def test_sanity_check(self):
-        """Run a simple test that always passes."""
+        """Run a simple test for mlclient side that always passes."""
         expected = True
         actual = True
-        assert actual == expected, "Expected True to be equal to True!"
+        assert actual == expected, "Expected it to always be True!"
