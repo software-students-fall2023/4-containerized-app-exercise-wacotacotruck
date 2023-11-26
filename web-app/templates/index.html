@@ -10,8 +10,8 @@
 
     <body>
         <div class="auth-buttons">
-            <button class="button" id="login">Login</button>
-            <button class="button" id="logout">Log Out</button>
+            <a href="{{url_for('login')}}"><button class="button" id="login" title="login">Login</button></a>
+            <a href="{{url_for('logout')}}"><button class="button" id="logout" title="logout">Logout</button></a>
         </div>
         
         <h1><b><center>Sing & Sync</center></b></h1>
