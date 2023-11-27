@@ -266,7 +266,7 @@ def filter_and_combine_notes(notes_data, minimum_note_duration=0.1):
     last_note_start_time = None
 
     # pylint: for i, note in enumerate(notes_data):
-    for note in enumerate(notes_data)
+    for note in enumerate(notes_data):
         if last_note is not None and note["note"] != last_note:
             end_time = max(note["time"], last_note_start_time + minimum_note_duration)
             filtered_notes.append(
