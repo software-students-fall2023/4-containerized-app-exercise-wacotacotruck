@@ -23,7 +23,7 @@ jobs:
           pipenv --python ${{ matrix.python-version }}
           cd machine-learning-client
           pipenv install --dev
-          pipenv lock --requirements --dev > requirements.txt
+          pipenv lock
           pipenv install -r requirements.txt
 
       - name: Turn on 'editable' mode
