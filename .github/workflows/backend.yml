@@ -1,4 +1,4 @@
-name: Backend Testing
+name: ML Client Testing
 on: [push]
 jobs:
   build:
@@ -21,7 +21,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install --user pipenv
           pipenv --python ${{ matrix.python-version }}
-          pipenv install --dev  
+          cd machine-learning-client
+          pipenv install --dev
           pipenv lock --requirements --dev > requirements.txt
           pipenv install -r requirements.txt
 
