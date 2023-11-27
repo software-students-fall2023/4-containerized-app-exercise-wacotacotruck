@@ -1,10 +1,5 @@
 name: Backend Testing
-
-on:
-  push:
-    branches:
-      - main
-
+on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -16,7 +11,6 @@ jobs:
         
     steps:
       - uses: actions/checkout@v3
-
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
@@ -33,7 +27,7 @@ jobs:
 
       - name: Turn on 'editable' mode
         run: |
-          pipenv install -e .
+            pipenv install -e .
 
       - name: Testing with pytest
         run: |

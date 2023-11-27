@@ -1,4 +1,4 @@
-name: log github events
+name: Log Github Events
 on:
   push:
     branches: [main, master]
