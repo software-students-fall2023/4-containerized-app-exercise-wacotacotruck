@@ -41,10 +41,12 @@ def index():
     """Renders the home page"""
     return render_template("index.html")
 
+
 @app.route("/browse")
 def browse():
     """Showing midi posts from the database"""
     return render_template("browse.html")
+
 
 def call_ml_client(data):
     """Contacts the ml client"""
