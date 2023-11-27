@@ -31,6 +31,7 @@ function stopRecording() {
 function sendAudioToServer(audioBlob) {
   let formData = new FormData();
   formData.append("audio", audioBlob, "recording.webm");
+  showLoader();
 
   fetch("http://localhost:5002/process", {
     method: "POST",
@@ -48,18 +49,18 @@ function sendAudioToServer(audioBlob) {
     })
     .catch((error) => {
       console.error("Error sending audio data to the server: ", error);
+    })
+    .finally(() => {
+      hideLoader(); 
     });
 }
 
-function displayMidiLink(midiUrl) {
-  const linkContainer = document.getElementById("detectedNotesDisplay");
-  linkContainer.innerHTML = "";
-  const link = document.createElement("a");
-  link.href = midiUrl;
-  link.textContent = "Download MIDI File";
-  link.download = "processed_midi.mid";
-  linkContainer.appendChild(link);
-  linkContainer.classList.remove("notes-display-hidden");
+function showLoader() {
+  document.getElementById('loader').style.display = 'flex';
+}
+
+function hideLoader() {
+  document.getElementById('loader').style.display = 'none';
 }
 
 // Function to handle description button
@@ -93,3 +94,42 @@ function toggleRecording() {
 
   isRecording = !isRecording;
 }
+
+function playMidi() {
+  const player = document.querySelector('midi-player');
+  if (player) {
+      player.start();
+  }
+}
+
+function stopMidi() {
+  const player = document.querySelector('midi-player');
+  if (player) {
+      player.stop();
+  }
+}
+
+function displayMidiLink(midiUrl) {
+  // Update MIDI player and visualizer source
+  const midiPlayer = document.querySelector('midi-player');
+  const midiVisualizer = document.getElementById('myVisualizer');
+  
+  if (midiPlayer && midiVisualizer) {
+    midiPlayer.src = midiUrl;
+    midiVisualizer.src = midiUrl;
+  }
+
+  const saveButton = document.getElementById("save");
+  if (saveButton) {
+    saveButton.setAttribute("data-midi-url", midiUrl);
+  }
+}
+
+function downloadMidi() {
+  const saveButton = document.getElementById("save");
+  const midiUrl = saveButton.getAttribute("data-midi-url");
+  if (midiUrl) {
+    window.location.href = midiUrl;
+  }
+}
+
