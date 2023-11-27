@@ -4,7 +4,8 @@ import os
 import logging
 
 # import io (commented out because import is unused currently)
-from flask import Flask, request, jsonify, url_for
+from flask import Flask, request, jsonify
+# from flask import url_for (commented out becase the import is unused)
 from flask_cors import CORS
 import crepe
 import pretty_midi
@@ -264,8 +265,8 @@ def filter_and_combine_notes(notes_data, minimum_note_duration=0.1):
     last_note = None
     last_note_start_time = None
 
-    # commented out due to unused i, original: for i, note in enumerate(notes_data):
-    for i, note in enumerate(notes_data):
+    # pylint: for i, note in enumerate(notes_data):
+    for note in enumerate(notes_data)
         if last_note is not None and note["note"] != last_note:
             end_time = max(note["time"], last_note_start_time + minimum_note_duration)
             filtered_notes.append(

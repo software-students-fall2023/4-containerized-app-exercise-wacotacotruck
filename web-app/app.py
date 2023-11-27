@@ -27,12 +27,12 @@ try:
     client.admin.command("ping")
     database = client[os.getenv("MONGO_DBNAME")]
     print("* Connected to MongoDB!")
-# except ConnectionError as err:
-#     print('* "Failed to connect to MongoDB at', os.getenv("MONGO_URI"))
-#     print("Database connection error:", err)
-except Exception as err:
+except ConnectionError as err:
     print('* "Failed to connect to MongoDB at', os.getenv("MONGO_URI"))
     print("Database connection error:", err)
+# except Exception as err:
+#     print('* "Failed to connect to MongoDB at', os.getenv("MONGO_URI"))
+#     print("Database connection error:", err)
 
 
 # Routes
