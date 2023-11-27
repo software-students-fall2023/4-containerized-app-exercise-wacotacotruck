@@ -27,12 +27,12 @@ try:
     client.admin.command("ping")
     database = client[os.getenv("MONGO_DBNAME")]
     print("* Connected to MongoDB!")
-except ConnectionError as err:
-    print('* "Failed to connect to MongoDB at', os.getenv("MONGO_URI"))
-    print("Database connection error:", err)
-# except Exception as err:
+# except ConnectionError as err:
 #     print('* "Failed to connect to MongoDB at', os.getenv("MONGO_URI"))
 #     print("Database connection error:", err)
+except Exception as err:
+    print('* "Failed to connect to MongoDB at', os.getenv("MONGO_URI"))
+    print("Database connection error:", err)
 
 
 # Routes
@@ -41,6 +41,10 @@ def index():
     """Renders the home page"""
     return render_template("index.html")
 
+@app.route("/browse")
+def browse():
+    """Showing midi posts from the database"""
+    return render_template("browse.html")
 
 def call_ml_client(data):
     """Contacts the ml client"""

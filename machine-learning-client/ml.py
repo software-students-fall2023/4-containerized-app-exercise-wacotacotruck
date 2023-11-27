@@ -49,11 +49,14 @@ def process_audio_chunks(audio, sr):
 
     for start in range(0, len(audio), chunk_size):
         audio_chunk = audio[start : (start + chunk_size)]
-        time, frequency, confidence, activation = crepe.predict(
-            audio_chunk, sr, viterbi=True
-        )
+        prediction_results = crepe.predict(audio_chunk, sr, viterbi=True)
 
-        for t, f, c in zip(time, frequency, confidence, activation):
+        # Unpack all values returned by crepe.predict
+        time = prediction_results[0]
+        frequency = prediction_results[1]
+        confidence = prediction_results[2]
+
+        for t, f, c in zip(time, frequency, confidence):
             if c >= confidence_threshold:
                 note_name = frequency_to_note_name(f)
                 notes_data.append(
@@ -93,7 +96,8 @@ def process_notes(notes_data):
 def generate_midi_url(filtered_and_combined_notes):
     """function to generate midi url"""
     midi_filename = create_midi_file(filtered_and_combined_notes)
-    return url_for("static", filename=midi_filename)
+    midi_url = f"http://localhost:5002/static/{midi_filename}"
+    return midi_url
 
 
 @app.route("/process", methods=["POST"])
@@ -261,7 +265,7 @@ def filter_and_combine_notes(notes_data, minimum_note_duration=0.1):
     last_note_start_time = None
 
     # commented out due to unused i, original: for i, note in enumerate(notes_data):
-    for note in enumerate(notes_data):
+    for i, note in enumerate(notes_data):
         if last_note is not None and note["note"] != last_note:
             end_time = max(note["time"], last_note_start_time + minimum_note_duration)
             filtered_notes.append(
