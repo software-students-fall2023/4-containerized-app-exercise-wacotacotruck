@@ -380,7 +380,7 @@ def detect_note_onsets(audio_file):
 #         # Find the point in the envelope where the amplitude falls below the threshold
 #         end_sample = next_onset_sample
 #         for j in range(onset_sample, next_onset_sample, 512):  
-# 512 is the hop length used in envelope calculation
+#           512 is the hop length used in envelope calculation
 #             if amp_env[j // 512] < threshold:
 #                 end_sample = j
 #                 break
@@ -472,7 +472,6 @@ def create_midi(filtered_notes, onsets, durations, tempo, output_file='output.mi
     static_dir = os.path.join(app.root_path, "static")
     if not os.path.exists(static_dir):
         os.makedirs(static_dir)
-    
     midi_file_path = os.path.join(static_dir, output_file)
     midi_data = pretty_midi.PrettyMIDI(initial_tempo=tempo)
     # midi_data.estimate_tempo = tempo
@@ -480,7 +479,6 @@ def create_midi(filtered_notes, onsets, durations, tempo, output_file='output.mi
     midi_data.instruments.append(instrument)
     midi_data.write(midi_file_path)
     logging.info("MIDI file written to %s", midi_file_path)
-    
     return output_file
 
 def create_midi_instrument(filtered_notes, onsets, durations):
@@ -490,7 +488,6 @@ def create_midi_instrument(filtered_notes, onsets, durations):
     instrument_program = pretty_midi.instrument_name_to_program('Acoustic Grand Piano')
     instrument = pretty_midi.Instrument(program=instrument_program)
     for note_info, onset, duration in zip(filtered_notes, onsets, durations):
-        
         logging.info("Adding note: %s", note_info)
         logging.info("Adding onset: %s", str(onset))
         logging.info("Adding duration: %s", str(duration))
