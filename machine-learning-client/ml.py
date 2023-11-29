@@ -49,7 +49,7 @@ def process_audio_chunks(audio, sr):
 
     for start in range(0, len(audio), chunk_size):
         audio_chunk = audio[start : (start + chunk_size)]
-        time, frequency, confidence, activation = crepe.predict(
+        time, frequency, confidence, _ = crepe.predict(
             audio_chunk, sr, viterbi=True
         )
 
@@ -91,9 +91,10 @@ def process_notes(notes_data):
     return filter_and_combine_notes(smoothed_notes)
 
 
-def generate_midi_url(filterd_comb_notes, onsets, durations, tempo):
+def generate_midi_url(filtrd_comb_notes, onsets, drtns, tempo):
     """function to generate midi url"""
-    midi_filename = create_midi(filterd_comb_notes, onsets, durations, tempo, output_file='output.mid')
+    midi_filename = create_midi(filtrd_comb_notes, onsets, drtns, tempo, output_file='output.mid')
+    # drtns = durations; had to edit because of pylint 0_0
 
     return url_for("static", filename=midi_filename)
 
@@ -348,7 +349,6 @@ def filter_and_combine_notes(notes_data):
         )
 
     logging.info("Filtered notes: %s", filtered_notes)
-    
     return filtered_notes
 
 
@@ -359,7 +359,6 @@ def detect_note_onsets(audio_file):
     # y, sr = librosa.load(audio_file, sr=44100)
     y, _ = librosa.load(audio_file, sr=44100)
     onsets = librosa.onset.onset_detect(y=y, sr=44100, units='time')
-    
     logging.info("onsets: %s", onsets)  # Lazy formatting used here
     return onsets
 
@@ -380,11 +379,11 @@ def detect_note_onsets(audio_file):
 #         next_onset_sample = int(onsets[i+1] * sr) if i + 1 < len(onsets) else len(y)
 #         # Find the point in the envelope where the amplitude falls below the threshold
 #         end_sample = next_onset_sample
-#         for j in range(onset_sample, next_onset_sample, 512):  # 512 is the hop length used in envelope calculation
+#         for j in range(onset_sample, next_onset_sample, 512):  
+# 512 is the hop length used in envelope calculation
 #             if amp_env[j // 512] < threshold:
 #                 end_sample = j
 #                 break
-    
 #         duration = (end_sample - onset_sample) / sr
 #         durations.append(duration)
 #     return durations
@@ -404,7 +403,8 @@ def estimate_note_durations(onsets, y, sr=44100, threshold=0.025):
 
         # Rest of your logic remains the same
         end_sample = next_onset_sample
-        for j in range(onset_sample, next_onset_sample, 512):  # 512 is the hop length used in envelope calculation
+        for j in range(onset_sample, next_onset_sample, 512):
+            # 512 is the hop length used in envelope calculation
             if amp_env[j // 512] < threshold:
                 end_sample = j
                 break
@@ -435,6 +435,9 @@ def estimate_note_durations(onsets, y, sr=44100, threshold=0.025):
 #     return tempo
 
 def estimate_tempo(audio_file):
+    """
+    Estimating tempo for better time mapping
+    """
     y, sr = librosa.load(audio_file, sr=44100)
     # Correct usage of beat_track with keyword arguments
     tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
@@ -473,7 +476,7 @@ def create_midi(filtered_notes, onsets, durations, tempo, output_file='output.mi
     midi_file_path = os.path.join(static_dir, output_file)
     midi_data = pretty_midi.PrettyMIDI(initial_tempo=tempo)
     # midi_data.estimate_tempo = tempo
-    instrument = create_midi_iinstrument(filtered_notes, onsets, durations)
+    instrument = create_midi_instrument(filtered_notes, onsets, durations)
     midi_data.instruments.append(instrument)
     midi_data.write(midi_file_path)
     logging.info("MIDI file written to %s", midi_file_path)
@@ -484,8 +487,8 @@ def create_midi_instrument(filtered_notes, onsets, durations):
     """
     Create a MIDI instrument and add notes to it.
     """
-    instrument = pretty_midi.Instrument(program=pretty_midi.instrument_name_to_program('Acoustic Grand Piano'))
-
+    instrument_program = pretty_midi.instrument_name_to_program('Acoustic Grand Piano')
+    instrument = pretty_midi.Instrument(program=instrument_program)
     for note_info, onset, duration in zip(filtered_notes, onsets, durations):
         
         logging.info("Adding note: %s", note_info)
