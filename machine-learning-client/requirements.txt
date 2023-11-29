@@ -8,3 +8,5 @@ numpy
 ffmpeg
 tensorflow 
 librosa
+pytest
+PySoundFile

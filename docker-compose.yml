@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 services:
   web-app:
     build:
@@ -14,9 +14,7 @@ services:
       - "5002:5002"
     volumes:
       - ./machine-learning-client:/machine-learning-client
-  db: 
+  db:
     image: mongo:4.0-xenial
-    ports: 
+    ports:
       - "27017:27017"
-    volumes: 
-      - ./db:/data/db 

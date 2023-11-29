@@ -6,32 +6,43 @@
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
         <link rel="stylesheet", type="text/css", href="../static/style.css">
+        <script src="https://cdn.jsdelivr.net/combine/npm/tone@14.7.58,npm/@magenta/music@1.23.1/es6/core.js,npm/focus-visible@5,npm/html-midi-player@1.5.0"></script>
     </head>
 
     <body>
+        <div class="browse-button">
+            <a href="{{ url_for('browse') }}"><button class="button"><i class="material-icons">explore</i></button></a>
+        </div>        
+
+        <div class="auth-buttons">
+            {% if 'user_id' not in session %}
+                <a href="{{ url_for('login') }}"><button class="button" id="login" title="login">Login</button></a>
+            {% else %}
+                <a href="{{ url_for('logout') }}"><button class="button" id="logout" title="logout">Log Out</button></a>
+            {% endif %}
+        </div>
+
         <h1><b><center>Sing & Sync</center></b></h1>
         <div class="upload-section">  
             
-            <div class="login-btn">
-                <a href="{{url_for('login')}}"><button class="button" id="login" title="login">Login</button></a>
-            </div>
-
-            <div class="login-btn">
-                <a href="{{url_for('logout')}}"><button class="button" id="logout" title="logout">Log Out</button></a>
-            </div>
-            
-            <div class="visualizer-container">
-                <svg id="vizSample"></svg>
-            </div>
+            <div class="visualizer-container" id="midiVisualizer">
+                <midi-player class="midi-player" src="" sound-font visualizer="#myVisualizer"></midi-player>
+                <midi-visualizer type="piano-roll" id="myVisualizer" class="piano-roll"></midi-visualizer>
+                <div class="loader-container" id="loader" style="display:none;">
+                    <div class="spinner"></div>
+                </div>
+                
+            </div>            
 
             <div id="control-container" class="button-container">
-                <button class="button" id="record" title="record" onclick="startRecording(); this.disabled = true; document.getElementById('stop').disabled = false;"><i class="material-icons">radio_button_checked</i></button>
-                <button class="button" id="stop" title="stop" onclick="stopRecording(); this.disabled = true; document.getElementById('record').disabled = false;" disabled><i class="material-icons">stop</i></button>
-                <button class="button" id="play" title="play" onclick="" disabled><i class="material-icons">play_arrow</i></button>
-                <button class="button" id="stop" title="stop" onclick="" disabled><i class="material-icons">stop</i></button>
-                <button class="button" id="save" title="save" onclick="" disabled><i class="material-icons">download</i></button>
+                <button class="button" id="recordButton" title="Start Recording" onclick="toggleRecording();">
+                    <i class="material-icons" id="recordIcon">fiber_manual_record</i>
+                </button>
+                <button class="button" id="play" title="play" onclick="playMidi()"><i class="material-icons">play_arrow</i></button>
+                <button class="button" id="stop" title="stop" onclick="stopMidi()"><i class="material-icons">stop</i></button>
+                <button class="button" id="save" title="save" onclick="downloadMidi();"><i class="material-icons">download</i></button>
                 <label class="button" id="fileBtn" title="upload midi">
-                    <i class="material-icons">upload_file</i>
+                    <i class="material-icons">cloud_upload</i> 
                     <input type="file" id="fileInput" multiple>
                 </label>
             <button class="button" title="information" onclick="toggleDescription()"><i class="material-icons">info</i></button>
@@ -44,8 +55,6 @@
             <div id="detectedNotesDisplay" class="notes-display-hidden">
                 <p id="detectedNotesText"></p>
             </div>
-            
-            <div id="loadingIndicator" class="hidden">Loading...</div>
 
             <div id="modal-background" onclick="toggleDescription()" style="display: none;">
                 <div id="description-container" onclick="event.stopPropagation();">
@@ -55,12 +64,13 @@
                         <li><i class="material-icons">radio_button_checked</i> Record your MIDI Notes</li>
                         <li><i class="material-icons">play_arrow</i> Plays the seqeuence</li>
                         <li><i class="material-icons">stop</i> Stops the sequence</li>
-                        <li><i class="material-icons">download</i> Saves note sequence to a .mid file</li>
-                        <li><i class="material-icons">upload_file</i> Add your midi sequence to our collection.</li>
+                        <li><i class="material-icons">download</i> Saves note sequence as a .mid file</li>
+                        <li><i class="material-icons">cloud_upload</i> Add your midi sequence to our collection.</li>
                     </ul>
                 </div>
             </div>
         </div>
         <script src="../static/script.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/midi-player-js@2.0.16/build/index.browser.min.js"></script>
     </body>
 </html>
