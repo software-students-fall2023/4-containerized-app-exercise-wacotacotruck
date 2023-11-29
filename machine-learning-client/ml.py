@@ -53,10 +53,9 @@ def process_audio_chunks(audio, sr):
             audio_chunk, sr, viterbi=True
         )
 
-        for t, f, c, a in zip(time, frequency, confidence, activation):
+        for t, f, c in zip(time, frequency, confidence):
             if c >= confidence_threshold:
                 note_name = frequency_to_note_name(f)
-                a = a
                 notes_data.append(
                     {
                         "time": float(t),
@@ -316,13 +315,13 @@ def filter_and_combine_notes(notes_data):
     """function to filter and combine notes."""
     filtered_notes = []
     last_note = None
-    last_note_start_time = None
+    # last_note_start_time = None
 
     # Correcting the enumeration here
-    for index, note in enumerate(notes_data):
+    # for index, note in enumerate(notes_data):
+    for note in notes_data:
         if last_note is not None and note["note"] != last_note:
             #end_time = max(note["time"], last_note_start_time + minimum_note_duration)
-            index = index
             filtered_notes.append(
                 {
                     "note": last_note,
@@ -349,7 +348,7 @@ def filter_and_combine_notes(notes_data):
         )
 
     logging.info("Filtered notes: %s", filtered_notes)
-    print(filtered_notes)
+    
     return filtered_notes
 
 
@@ -357,10 +356,11 @@ def detect_note_onsets(audio_file):
     """
     Detect when notes begin or onset.
     """
-    y, sr = librosa.load(audio_file, sr=44100)
+    # y, sr = librosa.load(audio_file, sr=44100)
+    y, _ = librosa.load(audio_file, sr=44100)
     onsets = librosa.onset.onset_detect(y=y, sr=44100, units='time')
-
-    logging.info("onsets: " + str(onsets))
+    
+    logging.info("onsets: %s", onsets)  # Lazy formatting used here
     return onsets
 
 # def estimate_note_durations(onsets, audio_length):
@@ -369,25 +369,64 @@ def detect_note_onsets(audio_file):
 #     logging.info("durations: " + str(durations))
 #     return durations
 
+# def estimate_note_durations(onsets, y, sr=44100, threshold=0.025):
+#     """
+#     Estimate note durations using onsets and amplitude envelope.
+#     """
+#     amp_env = calculate_amplitude_envelope(y, sr)
+#     durations = []
+#     for i in range(len(onsets)):
+#         onset_sample = int(onsets[i] * sr)
+#         next_onset_sample = int(onsets[i+1] * sr) if i + 1 < len(onsets) else len(y)
+#         # Find the point in the envelope where the amplitude falls below the threshold
+#         end_sample = next_onset_sample
+#         for j in range(onset_sample, next_onset_sample, 512):  # 512 is the hop length used in envelope calculation
+#             if amp_env[j // 512] < threshold:
+#                 end_sample = j
+#                 break
+    
+#         duration = (end_sample - onset_sample) / sr
+#         durations.append(duration)
+#     return durations
+
+# Because PyLint said I had to use enumerate... :/
 def estimate_note_durations(onsets, y, sr=44100, threshold=0.025):
     """
     Estimate note durations using onsets and amplitude envelope.
     """
     amp_env = calculate_amplitude_envelope(y, sr)
     durations = []
-    for i in range(len(onsets)):
-        onset_sample = int(onsets[i] * sr)
-        next_onset_sample = int(onsets[i+1] * sr) if i + 1 < len(onsets) else len(y)
-        # Find the point in the envelope where the amplitude falls below the threshold
+
+    # Iterate over onsets using enumerate
+    for i, onset in enumerate(onsets[:-1]):  # Exclude the last onset for now
+        onset_sample = int(onset * sr)
+        next_onset_sample = int(onsets[i+1] * sr)
+
+        # Rest of your logic remains the same
         end_sample = next_onset_sample
         for j in range(onset_sample, next_onset_sample, 512):  # 512 is the hop length used in envelope calculation
             if amp_env[j // 512] < threshold:
                 end_sample = j
                 break
-    
+
         duration = (end_sample - onset_sample) / sr
         durations.append(duration)
+
+    # Handle the last onset separately
+    if onsets:
+        last_onset_sample = int(onsets[-1] * sr)
+        end_sample = len(y)
+        for j in range(last_onset_sample, end_sample, 512):
+            if amp_env[j // 512] < threshold:
+                end_sample = j
+                break
+
+        last_duration = (end_sample - last_onset_sample) / sr
+        durations.append(last_duration)
+
+    logging.info("durations: %s", durations)
     return durations
+
 # def estimate_tempo(audio_file):
 #     y, sr = librosa.load(audio_file, sr=None)
 #     tempo, _ = librosa.beat.beat_track(y, sr=sr)
@@ -398,9 +437,9 @@ def estimate_note_durations(onsets, y, sr=44100, threshold=0.025):
 def estimate_tempo(audio_file):
     y, sr = librosa.load(audio_file, sr=44100)
     # Correct usage of beat_track with keyword arguments
-    tempo, _ = librosa.beat.beat_track(y=y, sr=44100)
+    tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
 
-    logging.info("tempo: " + str(tempo))
+    logging.info("tempo: %s", tempo)  # Use lazy % formatting
     return tempo
 
 # def calculate_amplitude_envelope(y, sr=44100, frame_size=1024, hop_length=512):
@@ -422,6 +461,9 @@ def calculate_amplitude_envelope(y, frame_size=1024, hop_length=512):
     return np.array(amplitude_envelope)
 
 def create_midi(filtered_notes, onsets, durations, tempo, output_file='output.mid'):
+    """
+    Creating midi file using all the information.
+    """
     logging.info("Received notes for MIDI creation: %s", filtered_notes)
     logging.info("Starting to create MIDI file.")
     static_dir = os.path.join(app.root_path, "static")
@@ -431,11 +473,25 @@ def create_midi(filtered_notes, onsets, durations, tempo, output_file='output.mi
     midi_file_path = os.path.join(static_dir, output_file)
     midi_data = pretty_midi.PrettyMIDI(initial_tempo=tempo)
     # midi_data.estimate_tempo = tempo
+    instrument = create_midi_iinstrument(filtered_notes, onsets, durations)
+    midi_data.instruments.append(instrument)
+    midi_data.write(midi_file_path)
+    logging.info("MIDI file written to %s", midi_file_path)
+    
+    return output_file
+
+def create_midi_instrument(filtered_notes, onsets, durations):
+    """
+    Create a MIDI instrument and add notes to it.
+    """
     instrument = pretty_midi.Instrument(program=pretty_midi.instrument_name_to_program('Acoustic Grand Piano'))
+
     for note_info, onset, duration in zip(filtered_notes, onsets, durations):
+        
         logging.info("Adding note: %s", note_info)
         logging.info("Adding onset: %s", str(onset))
         logging.info("Adding duration: %s", str(duration))
+
         note_number = pretty_midi.note_name_to_number(note_info['note'])
 
         logging.info("Note number: %s", note_number)
@@ -447,12 +503,7 @@ def create_midi(filtered_notes, onsets, durations, tempo, output_file='output.mi
         # Create and append the note
         note = pretty_midi.Note(velocity=100, pitch=note_number, start=start_time, end=end_time)
         instrument.notes.append(note)
-
-    midi_data.instruments.append(instrument)
-    midi_data.write(midi_file_path)
-    logging.info("MIDI file written to %s", midi_file_path)
-    
-    return output_file
+    return instrument
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5002)
