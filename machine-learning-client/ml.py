@@ -18,6 +18,7 @@ logging.basicConfig(level=logging.INFO)
 
 CORS(app)
 
+
 def frequency_to_note_name(frequency):
     """Convert a frequency in Hertz to a musical note name."""
     if frequency <= 0:
@@ -49,9 +50,7 @@ def process_audio_chunks(audio, sr):
 
     for start in range(0, len(audio), chunk_size):
         audio_chunk = audio[start : (start + chunk_size)]
-        time, frequency, confidence, _ = crepe.predict(
-            audio_chunk, sr, viterbi=True
-        )
+        time, frequency, confidence, _ = crepe.predict(audio_chunk, sr, viterbi=True)
 
         for t, f, c in zip(time, frequency, confidence):
             if c >= confidence_threshold:
@@ -93,7 +92,9 @@ def process_notes(notes_data):
 
 def generate_midi_url(filtrd_comb_notes, onsets, drtns, tempo):
     """function to generate midi url"""
-    midi_filename = create_midi(filtrd_comb_notes, onsets, drtns, tempo, output_file='output.mid')
+    midi_filename = create_midi(
+        filtrd_comb_notes, onsets, drtns, tempo, output_file="output.mid"
+    )
     # drtns = durations; had to edit because of pylint 0_0
 
     return url_for("static", filename=midi_filename)
@@ -134,9 +135,11 @@ def process_data():
         # Clean up temporary files
         clean_up_files(webm_file, wav_file)
 
-        midi_url = generate_midi_url(filtered_and_combined_notes, onsets, durations, tempo)
+        midi_url = generate_midi_url(
+            filtered_and_combined_notes, onsets, durations, tempo
+        )
         return jsonify({"midi_url": midi_url})
-        #store file in database, grab from there and show.
+        # store file in database, grab from there and show.
 
     except IOError as io_err:
         app.logger.error("IO error occurred: %s", io_err)
@@ -219,7 +222,7 @@ def process_data():
 #         app.logger.error("Value error occurred: %s", val_err)
 #         return jsonify({"error": str(val_err)}), 500
 
-#def create_midi_file(filtered_notes, onsets, durations, tempo, filename="output.mid"):
+# def create_midi_file(filtered_notes, onsets, durations, tempo, filename="output.mid"):
 #    """function to create midi file"""
 #    # logging.info(f"Received notes for MIDI creation: {filtered_notes}")
 #    logging.info("Received notes for MIDI creation: %s", filtered_notes)
@@ -312,6 +315,7 @@ def smooth_pitch_data(notes_data, window_size=5):
 #     print(filtered_notes)
 #     return filtered_notes
 
+
 def filter_and_combine_notes(notes_data):
     """function to filter and combine notes."""
     filtered_notes = []
@@ -322,29 +326,29 @@ def filter_and_combine_notes(notes_data):
     # for index, note in enumerate(notes_data):
     for note in notes_data:
         if last_note is not None and note["note"] != last_note:
-            #end_time = max(note["time"], last_note_start_time + minimum_note_duration)
+            # end_time = max(note["time"], last_note_start_time + minimum_note_duration)
             filtered_notes.append(
                 {
                     "note": last_note,
-                    #"start_time": last_note_start_time,
-                    #"end_time": end_time,
+                    # "start_time": last_note_start_time,
+                    # "end_time": end_time,
                 }
             )
             last_note = note["note"]
-            #last_note_start_time = note["time"]
+            # last_note_start_time = note["time"]
         elif last_note is None:
             last_note = note["note"]
-            #last_note_start_time = note["time"]
+            # last_note_start_time = note["time"]
 
     if last_note is not None:
-        #end_time = max(
+        # end_time = max(
         #    notes_data[-1]["time"], last_note_start_time + minimum_note_duration
-        #)
+        # )
         filtered_notes.append(
             {
                 "note": last_note,
-                #"start_time": last_note_start_time,
-                #"end_time": end_time,
+                # "start_time": last_note_start_time,
+                # "end_time": end_time,
             }
         )
 
@@ -358,12 +362,14 @@ def detect_note_onsets(audio_file):
     """
     # y, sr = librosa.load(audio_file, sr=44100)
     y, _ = librosa.load(audio_file, sr=44100)
-    onsets = librosa.onset.onset_detect(y=y, sr=44100, units='time')
+    onsets = librosa.onset.onset_detect(y=y, sr=44100, units="time")
     logging.info("onsets: %s", onsets)  # Lazy formatting used here
     return onsets
 
+
 # def estimate_note_durations(onsets, audio_length):
 #     durations = np.diff(onsets, append=audio_length)
+
 
 #     logging.info("durations: " + str(durations))
 #     return durations
@@ -378,7 +384,7 @@ def estimate_note_durations(onsets, y, sr=44100, threshold=0.025):
     # Iterate over onsets using enumerate
     for i, onset in enumerate(onsets[:-1]):  # Exclude the last onset for now
         onset_sample = int(onset * sr)
-        next_onset_sample = int(onsets[i+1] * sr)
+        next_onset_sample = int(onsets[i + 1] * sr)
 
         # Rest of your logic remains the same
         end_sample = next_onset_sample
@@ -406,12 +412,14 @@ def estimate_note_durations(onsets, y, sr=44100, threshold=0.025):
     logging.info("durations: %s", durations)
     return durations
 
+
 # def estimate_tempo(audio_file):
 #     y, sr = librosa.load(audio_file, sr=None)
 #     tempo, _ = librosa.beat.beat_track(y, sr=sr)
 
 #     logging.info("tempo: " + str(tempo))
 #     return tempo
+
 
 def estimate_tempo(audio_file):
     """
@@ -424,6 +432,7 @@ def estimate_tempo(audio_file):
     logging.info("tempo: %s", tempo)  # Use lazy % formatting
     return tempo
 
+
 # def calculate_amplitude_envelope(y, sr=44100, frame_size=1024, hop_length=512):
 #     """
 #     Calculate the amplitude envelope of an audio signal with a given frame size and hop length.
@@ -431,18 +440,20 @@ def estimate_tempo(audio_file):
 #     amplitude_envelope = np.array([max(y[i:i+frame_size]) for i in range(0, len(y), hop_length)])
 #     return amplitude_envelope
 
+
 def calculate_amplitude_envelope(y, frame_size=1024, hop_length=512):
     """
     Calculate a smoother amplitude envelope of an audio signal using RMS.
     """
     amplitude_envelope = []
     for i in range(0, len(y), hop_length):
-        frame = y[i:i+frame_size]
+        frame = y[i : i + frame_size]
         rms = np.sqrt(np.mean(frame**2))
         amplitude_envelope.append(rms)
     return np.array(amplitude_envelope)
 
-def create_midi(filtered_notes, onsets, durations, tempo, output_file='output.mid'):
+
+def create_midi(filtered_notes, onsets, durations, tempo, output_file="output.mid"):
     """
     Creating midi file using all the information.
     """
@@ -460,18 +471,19 @@ def create_midi(filtered_notes, onsets, durations, tempo, output_file='output.mi
     logging.info("MIDI file written to %s", midi_file_path)
     return output_file
 
+
 def create_midi_instrument(filtered_notes, onsets, durations):
     """
     Create a MIDI instrument and add notes to it.
     """
-    instrument_program = pretty_midi.instrument_name_to_program('Acoustic Grand Piano')
+    instrument_program = pretty_midi.instrument_name_to_program("Acoustic Grand Piano")
     instrument = pretty_midi.Instrument(program=instrument_program)
     for note_info, onset, duration in zip(filtered_notes, onsets, durations):
         logging.info("Adding note: %s", note_info)
         logging.info("Adding onset: %s", str(onset))
         logging.info("Adding duration: %s", str(duration))
 
-        note_number = pretty_midi.note_name_to_number(note_info['note'])
+        note_number = pretty_midi.note_name_to_number(note_info["note"])
 
         logging.info("Note number: %s", note_number)
 
@@ -480,9 +492,12 @@ def create_midi_instrument(filtered_notes, onsets, durations):
         end_time = start_time + duration
 
         # Create and append the note
-        note = pretty_midi.Note(velocity=100, pitch=note_number, start=start_time, end=end_time)
+        note = pretty_midi.Note(
+            velocity=100, pitch=note_number, start=start_time, end=end_time
+        )
         instrument.notes.append(note)
     return instrument
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5002)

@@ -35,6 +35,7 @@ except ConnectionError as err:
 #     print('* "Failed to connect to MongoDB at', os.getenv("MONGO_URI"))
 #     print("Database connection error:", err)
 
+
 # Routes
 @app.route("/")
 def index():
