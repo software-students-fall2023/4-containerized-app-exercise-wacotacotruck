@@ -367,27 +367,6 @@ def detect_note_onsets(audio_file):
 
 #     logging.info("durations: " + str(durations))
 #     return durations
-
-# def estimate_note_durations(onsets, y, sr=44100, threshold=0.025):
-#     """
-#     Estimate note durations using onsets and amplitude envelope.
-#     """
-#     amp_env = calculate_amplitude_envelope(y, sr)
-#     durations = []
-#     for i in range(len(onsets)):
-#         onset_sample = int(onsets[i] * sr)
-#         next_onset_sample = int(onsets[i+1] * sr) if i + 1 < len(onsets) else len(y)
-#         # Find the point in the envelope where the amplitude falls below the threshold
-#         end_sample = next_onset_sample
-#         for j in range(onset_sample, next_onset_sample, 512):  
-#           512 is the hop length used in envelope calculation
-#             if amp_env[j // 512] < threshold:
-#                 end_sample = j
-#                 break
-#         duration = (end_sample - onset_sample) / sr
-#         durations.append(duration)
-#     return durations
-
 # Because PyLint said I had to use enumerate... :/
 def estimate_note_durations(onsets, y, sr=44100, threshold=0.025):
     """
@@ -413,7 +392,7 @@ def estimate_note_durations(onsets, y, sr=44100, threshold=0.025):
         durations.append(duration)
 
     # Handle the last onset separately
-    if onsets:
+    if len(onsets) > 0:
         last_onset_sample = int(onsets[-1] * sr)
         end_sample = len(y)
         for j in range(last_onset_sample, end_sample, 512):
