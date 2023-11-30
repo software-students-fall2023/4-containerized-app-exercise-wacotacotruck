@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/combine/npm/tone@14.7.58,npm/@magenta/music@1.23.1/es6/core.js,npm/focus-visible@5,npm/html-midi-player@1.5.0"></script>
     <link rel="stylesheet", type="text/css", href="../static/style.css">
 </head>
 <body>
@@ -20,8 +21,29 @@
             <a href="{{ url_for('logout') }}"><button class="button" id="logout" title="logout">Log Out</button></a>
         {% endif %}
     </div>
+    <div class="centered-container">
     <h1>Browse MIDI Files</h1>
-    <p>No MIDI files available.</p>
+    <div id="midi-posts">
+        {% for post in midi_posts %}
+        <div class="post-wrapper">
+            <div class="midi-post">
+                <h2>Posted by: {{ post.username }}</h2>
+                <div class="visualizer-container-post" id="midiVisualizer">
+                    <midi-player id="midi-player-{{ loop.index }}" class="hidden-midi-player" src="{{ post.midi_url }}" visualizer="#midi-visualizer-{{ loop.index }}"></midi-player>
+                    <midi-visualizer type="piano-roll" id="midi-visualizer-{{ loop.index }}" class="piano-roll"></midi-visualizer>
+                </div>
+                <button class="button" onclick="playPostMidi('midi-player-{{ loop.index }}')" title="play"><i class="material-icons">play_arrow</i></button>
+                <button class="button" onclick="stopPostMidi('midi-player-{{ loop.index }}')" title="stop"><i class="material-icons">stop</i></button>
+                <button class="button" title="save" onclick="downloadMidiPost('{{ post.midi_url }}')">
+                    <i class="material-icons">download</i>
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    </div>
+    <script src="../static/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/midi-player-js@2.0.16/build/index.browser.min.js"></script>
 </body>
 </html>
 
