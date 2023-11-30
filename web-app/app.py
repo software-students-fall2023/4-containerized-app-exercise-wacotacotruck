@@ -6,6 +6,7 @@ from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 from flask_session import Session
+
 # import boto3
 from bson import ObjectId
 
@@ -73,7 +74,7 @@ def upload_midi():
         return jsonify({"error": "User not logged in"}), 401
 
     data = request.get_json()
-    filename = data.get('filename')
+    filename = data.get("filename")
 
     if not filename:
         return jsonify({"error": "No filename provided"}), 400
@@ -95,11 +96,7 @@ def upload_midi():
 
     # Save the S3 URL with user details
     midi_collection = database["midis"]
-    midi_data = {
-        "user_id": user_id,
-        "username": user["username"],
-        "midi_url": s3_url
-    }
+    midi_data = {"user_id": user_id, "username": user["username"], "midi_url": s3_url}
     midi_collection.insert_one(midi_data)
 
     return jsonify({"message": "MIDI URL uploaded successfully"}), 200
