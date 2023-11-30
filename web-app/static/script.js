@@ -4,29 +4,33 @@ let isRecording = false;
 
 function startRecording() {
   navigator.mediaDevices
-    .getUserMedia({ audio: true })
-    .then((stream) => {
-      const options = { mimeType: "audio/webm" };
-      mediaRecorder = new MediaRecorder(stream, options);
-      mediaRecorder.start();
-      audioChunks = [];
-      mediaRecorder.addEventListener("dataavailable", (event) => {
-        audioChunks.push(event.data);
+      .getUserMedia({ audio: true })
+      .then((stream) => {
+          const options = { mimeType: "audio/webm" };
+          mediaRecorder = new MediaRecorder(stream, options);
+          mediaRecorder.ondataavailable = handleDataAvailable;
+          mediaRecorder.onstop = handleStop;
+          mediaRecorder.start();
+          audioChunks = [];
+      })
+      .catch((error) => {
+          console.error("Error accessing the microphone: ", error);
       });
-    })
-    .catch((error) => {
-      console.error("Error accessing the microphone: ", error);
-    });
 }
 
 function stopRecording() {
   mediaRecorder.stop();
-
-  mediaRecorder.addEventListener("stop", () => {
-    const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
-    sendAudioToServer(audioBlob);
-  });
 }
+
+function handleDataAvailable(event) {
+  audioChunks.push(event.data);
+}
+
+function handleStop() {
+  const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+  sendAudioToServer(audioBlob);
+}
+
 
 function sendAudioToServer(audioBlob) {
   let formData = new FormData();
@@ -95,6 +99,7 @@ function toggleRecording() {
   isRecording = !isRecording;
 }
 
+
 function playMidi() {
   const player = document.querySelector('midi-player');
   if (player) {
@@ -109,8 +114,27 @@ function stopMidi() {
   }
 }
 
+function playPostMidi(playerId) {
+  const player = document.getElementById(playerId);
+  if (player) {
+      player.start();  
+  }
+}
+
+function stopPostMidi(playerId) {
+  const player = document.getElementById(playerId);
+  if (player) {
+      player.stop();
+  }
+}
+
+
 function displayMidiLink(midiUrl) {
   // Update MIDI player and visualizer source
+  if (!midiUrl) {
+    console.error("midi url is undefined");
+    return;
+  }
   const midiPlayer = document.querySelector('midi-player');
   const midiVisualizer = document.getElementById('myVisualizer');
   
@@ -133,3 +157,50 @@ function downloadMidi() {
   }
 }
 
+function uploadMidi() {
+  const midiPlayer = document.querySelector('midi-player');
+  const midiSrc = midiPlayer ? midiPlayer.src : null;
+
+  if (!midiSrc) {
+      console.error("No MIDI source to upload");
+      return;
+  }
+
+  const filename = midiSrc.split('/').pop();
+
+  fetch('http://localhost:5001/upload-midi', {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ filename: filename })
+  })
+  .then(response => response.json())
+  .then(data => {
+      if (data.error) {
+          console.error("Error uploading MIDI file:", data.error);
+      } else {
+          console.log("MIDI file uploaded successfully:", data.message);
+      }
+  })
+  .catch(error => {
+      console.error("Error in MIDI file upload:", error);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.midi-post').forEach(post => {
+      const midiPlayer = post.querySelector('midi-player');
+      const midiVisualizer = post.querySelector('midi-visualizer');
+
+      if (midiPlayer && midiVisualizer) {
+          midiVisualizer.src = midiPlayer.src;
+      }
+  });
+});
+
+function downloadMidiPost(midiUrl) {
+  if (midiUrl) {
+    window.location.href = midiUrl; // This triggers the download
+  }
+}

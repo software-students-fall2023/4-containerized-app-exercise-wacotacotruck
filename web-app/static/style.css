@@ -64,6 +64,7 @@ p {
 
 .visualizer-container {
   border-radius: 10px;
+  min-height: 300px;
   background-color: #ffffff; 
   border: none;
   box-shadow: 4px 4px 10px #ccc, -4px -4px 10px #fff; 
@@ -73,6 +74,7 @@ p {
   flex-direction: column;
   align-items: center; 
   gap: 20px; 
+  margin-bottom: 15px;
 }
 
 .midi-player {
@@ -80,6 +82,13 @@ p {
   position: absolute;
   width: 1px;
   height: 1px;
+}
+
+.hidden-midi-player {
+  visibility: hidden; 
+  position: absolute; 
+  width: 1px;      
+  height: 1px;       
 }
 
 .midi-visualizer {
@@ -209,20 +218,6 @@ input[type="file"] {
   color: inherit;
   font-weight: inherit;
   text-align: center;
-}
-
-.visualizer-container {
-  border-radius: 10px;
-  position: relative;
-  width: 600px;
-  margin: 0 auto;
-  height: 250px;
-  border: none;
-  background-color: #ffffff; 
-  box-shadow: 4px 4px 10px #ccc, -4px -4px 10px #fff;
-  overflow-x: auto;
-  overflow-y: hidden;
-  white-space: nowrap;
 }
 
 svg {
@@ -516,23 +511,81 @@ form button:focus {
   margin-left: 20px;
 }
 
-@media (max-width: 768px) {
-  .visualizer-container {
-      width: 100%; 
-  }
+.centered-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
 
-  .button {
-      padding: 8px 15px; 
-      margin: 2px; 
-  }
+.post-wrapper {
+  background-color: #f0f0f0;
+  border-radius: 20px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+  padding: 20px;
+  max-width: 600px;
+  width: 100%;
+}
+
+.midi-post {
+  margin-bottom: 20px;
+  text-align: center;
+  width: 100%;
+}
+
+.midi-post h2 {
+  color: #333;
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.visualizer-container-post {
+  border-radius: 10px;
+  position: relative;
+  width: 600px;
+  margin: 0 auto;
+  height: 250px;
+  border: none;
+  background-color: #ffffff; 
+  box-shadow: 4px 4px 10px #ccc, -4px -4px 10px #fff;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+.midi-post .button {
+  font-size: 14px;
+  margin: 5px;
+  padding: 8px 16px;
+  transition: background-color 0.3s ease;
 }
 
 @media (max-width: 768px) {
+
+  .body{
+    padding: 5px; 
+  }
+
+  .post-wrapper,
+  .visualizer-container-post {
+    width: calc(100% - 20px); 
+  }
+
   .content {
     width: 100%;
     margin: auto; 
     box-shadow: 4px 4px 10px #ccc, -4px -4px 10px #fff;
     border-radius: 10px;
+  }
+
+  .visualizer-container {
+    width: 100%; 
+    height: 200px; 
+    margin-bottom: 15px;
   }
 
   input[type="text"],
@@ -543,5 +596,22 @@ form button:focus {
     max-width: 250px;
     margin: auto; 
   }
+
+  .post-wrapper {
+    padding: 10px; 
+  }
+
+  .visualizer-container-post {
+    margin-bottom: 15px;
+  }
+
+  .midi-post .button {
+    padding: 6px 12px;
+  }
+
+  .button {
+    padding: 8px 15px; 
+    margin: 2px; 
+}
 }
 

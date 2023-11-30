@@ -10,3 +10,5 @@ tensorflow
 librosa
 pytest
 PySoundFile
+python-dotenv
+boto3

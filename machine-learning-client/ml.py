@@ -3,6 +3,9 @@ import subprocess
 import os
 import logging
 import librosa
+from dotenv import load_dotenv
+import uuid
+import datetime
 
 # import io (commented out because import is unused currently)
 from flask import Flask, request, jsonify, url_for
@@ -11,12 +14,27 @@ import crepe
 import pretty_midi
 import soundfile as sf
 import numpy as np
+import boto3
+from botocore.exceptions import NoCredentialsError
+
 
 app = Flask(__name__)
+
+load_dotenv() 
 
 logging.basicConfig(level=logging.INFO)
 
 CORS(app)
+
+aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
+aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+s3_bucket_name = os.getenv("S3_BUCKET_NAME")
+
+s3 = boto3.client(
+    's3',
+    aws_access_key_id=aws_access_key_id,
+    aws_secret_access_key=aws_secret_access_key
+)
 
 
 def frequency_to_note_name(frequency):
@@ -96,10 +114,45 @@ def generate_midi_url(filtrd_comb_notes, onsets, drtns, tempo):
         filtrd_comb_notes, onsets, drtns, tempo, output_file="output.mid"
     )
     # drtns = durations; had to edit because of pylint 0_0
+    midi_url = f"http://localhost:5002/static/{midi_filename}"
 
-    return url_for("static", filename=midi_filename)
+    return midi_url; 
 
 
+def create_and_store_midi_in_s3(filtrd_comb_notes, onsets, drtns, tempo):
+    """Function to generate midi url after uploading to AWS S3."""
+    
+    unique_id = str(uuid.uuid4())
+    midi_filename = f"output_{unique_id}.mid"
+    
+    create_midi(filtrd_comb_notes, onsets, drtns, tempo, output_file=midi_filename)
+    s3_bucket_name = os.getenv("S3_BUCKET_NAME")
+
+    s3 = boto3.client('s3')
+
+    try:
+        local_midi_file_path = f'static/{midi_filename}'
+
+        s3.upload_file(local_midi_file_path, s3_bucket_name, midi_filename)
+
+        midi_url = f"https://{s3_bucket_name}.s3.amazonaws.com/{midi_filename}"
+        
+        if os.path.exists(local_midi_file_path):
+            os.remove(local_midi_file_path)
+            print(f"Successfully deleted local file: {local_midi_file_path}")
+        else:
+            print(f"Local file not found for deletion: {local_midi_file_path}")
+
+        return midi_url
+    
+    except FileNotFoundError:
+        print("The MIDI file was not found")
+        raise
+    except NoCredentialsError:
+        print("AWS credentials not available")
+        raise
+    
+    
 @app.route("/process", methods=["POST"])
 def process_data():
     """Route to process the data."""
@@ -135,9 +188,11 @@ def process_data():
         # Clean up temporary files
         clean_up_files(webm_file, wav_file)
 
-        midi_url = generate_midi_url(
-            filtered_and_combined_notes, onsets, durations, tempo
-        )
+        # midi_url = generate_midi_url(
+        #     filtered_and_combined_notes, onsets, durations, tempo
+        # )
+        
+        midi_url = create_and_store_midi_in_s3(filtered_and_combined_notes, onsets, durations, tempo) 
         return jsonify({"midi_url": midi_url})
         # store file in database, grab from there and show.
 
@@ -147,112 +202,6 @@ def process_data():
     except ValueError as val_err:
         app.logger.error("Value error occurred: %s", val_err)
         return jsonify({"error": str(val_err)}), 500
-
-
-# commented out the following function due to too many local variables
-# a revised version is as above
-# def process_data():
-#     """Route to process the data."""
-#     try:
-#         webm_file = "temp_recording.webm"
-#         wav_file = "temp_recording.wav"
-
-#         with open(webm_file, "wb") as file:
-#             file.write(request.files["audio"].read())
-
-#         convert_webm_to_wav(webm_file, wav_file)
-
-#         audio, sr = sf.read(wav_file)
-
-#         confidence_threshold = 0.90
-#         chunk_size = 1024 * 10
-#         notes_data = []
-
-#         for start in range(0, len(audio), chunk_size):
-#             end = start + chunk_size
-#             audio_chunk = audio[start:end]
-#             # commented out due to unused variable activation
-#             # original: time, frequency, confidence, activation = crepe.predict(
-#             #     audio_chunk, sr, viterbi=True
-#             # )
-
-#             time, frequency, confidence, _ = crepe.predict(
-#                 audio_chunk, sr, viterbi=True
-#             )
-
-#             for t, f, c in zip(time, frequency, confidence):
-#                 if c >= confidence_threshold:
-#                     note_name = frequency_to_note_name(f)
-#                     notes_data.append(
-#                         {
-#                             "time": float(t),
-#                             "note": note_name,
-#                             "confidence": round(float(c), 2),
-#                         }
-#                     )
-
-#         notes_data_sorted = sorted(notes_data, key=lambda x: x["time"])
-#         # logging.info(f"Chunked notes data for jsonify: {notes_data_sorted}")
-#         logging.info("Chunked notes data for jsonify: %s", notes_data_sorted)
-
-#         os.remove(webm_file)
-#         os.remove(wav_file)
-
-#         smoothed_notes = smooth_pitch_data(notes_data)
-
-#         filtered_and_combined_notes = filter_and_combine_notes(smoothed_notes)
-#         # logging.info(f"Filtered and combined notes: {filtered_and_combined_notes}")
-#         logging.info("Filtered and combined notes: %s", filtered_and_combined_notes)
-
-#         midi_filename = create_midi_file(filtered_and_combined_notes)
-#         midi_url = url_for("static", filename=midi_filename)
-
-#         return jsonify({"midi_url": midi_url})
-
-
-#     # commented out due to too general exception, original is as below
-#     # except Exception as e:
-#     #     # app.logger.error(f"Error processing data: {e}")
-#     #     app.logger.error("Error processing data: %s", e)
-#     #     return jsonify({"error": str(e)}), 500
-#     except IOError as io_err:
-#         app.logger.error("IO error occurred: %s", io_err)
-#         return jsonify({"error": str(io_err)}), 500
-#     except ValueError as val_err:
-#         app.logger.error("Value error occurred: %s", val_err)
-#         return jsonify({"error": str(val_err)}), 500
-
-# def create_midi_file(filtered_notes, onsets, durations, tempo, filename="output.mid"):
-#    """function to create midi file"""
-#    # logging.info(f"Received notes for MIDI creation: {filtered_notes}")
-#    logging.info("Received notes for MIDI creation: %s", filtered_notes)
-#    logging.info("Starting to create MIDI file.")
-#    static_dir = os.path.join(app.root_path, "static")
-#    if not os.path.exists(static_dir):
-#        os.makedirs(static_dir)
-#
-#    midi_file_path = os.path.join(static_dir, filename)
-#    midi = pretty_midi.PrettyMIDI()
-#    midi.estimate_tempo = tempo
-#    piano_program = pretty_midi.instrument_name_to_program("Acoustic Grand Piano")
-#    piano = pretty_midi.Instrument(program=piano_program)
-#
-#    for note_info in filtered_notes, onsets, durations:
-#        # logging.info(f"Adding note: {note_info}")
-#        logging.info("Adding note: %s", note_info)
-#        midi_note = pretty_midi.Note(
-#            velocity=100,
-#            pitch=pretty_midi.note_name_to_number(note_info["note"]),
-#            start=onsets,
-#           end=durations,
-#        )
-#        piano.notes.append(midi_note)
-#
-#    midi.instruments.append(piano)
-#    midi.write(midi_file_path)
-#    # logging.info(f"MIDI file written to {midi_file_path}")
-#    logging.info("MIDI file written to %s", midi_file_path)
-#    return filename
 
 
 def smooth_pitch_data(notes_data, window_size=5):
@@ -271,49 +220,6 @@ def smooth_pitch_data(notes_data, window_size=5):
 
         smoothed_data.append({"time": avg_time, "note": avg_note})
     return smoothed_data
-
-
-# def filter_and_combine_notes(notes_data, minimum_note_duration=0.1):
-#     """function to filter and combine notes."""
-#     filtered_notes = []
-#     last_note = None
-#     last_note_start_time = None
-
-#     # commented out due to unused i, original: for i, note in enumerate(notes_data):
-#     for note in enumerate(notes_data):
-#         if last_note is not None and note["note"] != last_note:
-#             end_time = max(note["time"], last_note_start_time + minimum_note_duration)
-#             filtered_notes.append(
-#                 {
-#                     "note": last_note,
-#                     "start_time": last_note_start_time,
-#                     "end_time": end_time,
-#                 }
-#             )
-#             last_note = note["note"]
-#             last_note_start_time = note["time"]
-#         elif last_note is None:
-#             last_note = note["note"]
-#             last_note_start_time = note["time"]
-
-#     if last_note is not None:
-#         # last_duration = notes_data[-1]["time"] - last_note_start_time
-#         # (commented out due to unused variable)
-#         end_time = max(
-#             notes_data[-1]["time"], last_note_start_time + minimum_note_duration
-#         )
-#         filtered_notes.append(
-#             {
-#                 "note": last_note,
-#                 "start_time": last_note_start_time,
-#                 "end_time": end_time,
-#             }
-#         )
-
-#     # logging.info(f"Filtered notes: {filtered_notes}")
-#     logging.info("Filtered notes: %s", filtered_notes)
-#     print(filtered_notes)
-#     return filtered_notes
 
 
 def filter_and_combine_notes(notes_data):
@@ -374,6 +280,8 @@ def detect_note_onsets(audio_file):
 #     logging.info("durations: " + str(durations))
 #     return durations
 # Because PyLint said I had to use enumerate... :/
+
+ 
 def estimate_note_durations(onsets, y, sr=44100, threshold=0.025):
     """
     Estimate note durations using onsets and amplitude envelope.
@@ -459,6 +367,9 @@ def create_midi(filtered_notes, onsets, durations, tempo, output_file="output.mi
     """
     logging.info("Received notes for MIDI creation: %s", filtered_notes)
     logging.info("Starting to create MIDI file.")
+    if tempo <= 0:
+        logging.warning("Invalid tempo detected. Setting default tempo.")
+        tempo = 120  
     static_dir = os.path.join(app.root_path, "static")
     if not os.path.exists(static_dir):
         os.makedirs(static_dir)

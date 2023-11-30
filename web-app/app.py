@@ -1,15 +1,29 @@
 """Web-app."""
 import os
-from flask import Flask, url_for, redirect, render_template, session, request
+from flask import Flask, url_for, redirect, render_template, session, request, jsonify, Response
 import requests
 from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 from flask_session import Session
+import boto3 
+from bson import ObjectId
+
 
 # Initializes Flask application and loads the .env file from the MongoDB Atlas Database
 app = Flask(__name__)
 load_dotenv()
+
+# Initialize S3 client
+aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
+aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+s3_bucket_name = os.getenv("S3_BUCKET_NAME")
+
+s3 = boto3.client(
+    's3',
+    aws_access_key_id=aws_access_key_id,
+    aws_secret_access_key=aws_secret_access_key
+)
 
 # Monitors Flask's session management: Uses a secret key to sign and encrypt session data
 # Secret key is essential for the proper functioning of user sessions in your Flask application.
@@ -45,8 +59,50 @@ def index():
 
 @app.route("/browse")
 def browse():
-    """Showing midi posts from the database"""
-    return render_template("browse.html")
+    """Renders the browse page"""
+    midi_collection = database["midis"]
+    midi_posts = midi_collection.find({})
+    return render_template("browse.html", midi_posts=list(midi_posts))
+
+
+@app.route("/upload-midi", methods=["POST"])
+def upload_midi():
+    """Handles uploading midi to the database."""
+    if "user_id" not in session:
+        app.logger.warning("User not logged in")
+        return jsonify({"error": "User not logged in"}), 401
+
+    data = request.get_json()
+    filename = data.get('filename')
+
+    if not filename:
+        return jsonify({"error": "No filename provided"}), 400
+
+    user_id = session["user_id"]
+
+    try:
+        user_id_obj = ObjectId(user_id)
+    except:
+        return jsonify({"error": "Invalid User ID"}), 400
+
+    user = database.users.find_one({"_id": user_id_obj})
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    # Format the S3 URL
+    s3_url = f"https://{s3_bucket_name}.s3.amazonaws.com/{filename}"
+
+    # Save the S3 URL with user details
+    midi_collection = database["midis"]
+    midi_data = {
+        "user_id": user_id,
+        "username": user["username"],
+        "midi_url": s3_url
+    }
+    midi_collection.insert_one(midi_data)
+
+    return jsonify({"message": "MIDI URL uploaded successfully"}), 200
 
 
 def call_ml_client(data):
