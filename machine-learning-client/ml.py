@@ -5,6 +5,7 @@ import logging
 import uuid
 import librosa
 from dotenv import load_dotenv
+
 # import io (commented out because import is unused currently)
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -29,9 +30,9 @@ aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
 s3_bucket_name = os.getenv("S3_BUCKET_NAME")
 
 s3 = boto3.client(
-    's3',
+    "s3",
     aws_access_key_id=aws_access_key_id,
-    aws_secret_access_key=aws_secret_access_key
+    aws_secret_access_key=aws_secret_access_key,
 )
 
 
@@ -124,7 +125,7 @@ def create_and_store_midi_in_s3(filtrd_comb_notes, onsets, drtns, tempo):
     create_midi(filtrd_comb_notes, onsets, drtns, tempo, output_file=midi_filename)
 
     try:
-        local_midi_file_path = f'static/{midi_filename}'
+        local_midi_file_path = f"static/{midi_filename}"
 
         s3.upload_file(local_midi_file_path, s3_bucket_name, midi_filename)
 
