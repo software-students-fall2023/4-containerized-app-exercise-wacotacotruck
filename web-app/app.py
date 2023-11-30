@@ -6,7 +6,7 @@ from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 from flask_session import Session
-import boto3
+# import boto3
 from bson import ObjectId
 
 
@@ -17,7 +17,7 @@ load_dotenv()
 # Initialize S3 client - commented out for now due to pylint
 # aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
 # aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
-# s3_bucket_name = os.getenv("S3_BUCKET_NAME")
+s3_bucket_name = os.getenv("S3_BUCKET_NAME")
 
 # s3 = boto3.client(
 #     's3',
