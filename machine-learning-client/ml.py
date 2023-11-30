@@ -2,13 +2,11 @@
 import subprocess
 import os
 import logging
+import uuid
 import librosa
 from dotenv import load_dotenv
-import uuid
-import datetime
-
 # import io (commented out because import is unused currently)
-from flask import Flask, request, jsonify, url_for
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 import crepe
 import pretty_midi
@@ -20,7 +18,7 @@ from botocore.exceptions import NoCredentialsError
 
 app = Flask(__name__)
 
-load_dotenv() 
+load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 
@@ -116,19 +114,14 @@ def generate_midi_url(filtrd_comb_notes, onsets, drtns, tempo):
     # drtns = durations; had to edit because of pylint 0_0
     midi_url = f"http://localhost:5002/static/{midi_filename}"
 
-    return midi_url; 
+    return midi_url
 
 
 def create_and_store_midi_in_s3(filtrd_comb_notes, onsets, drtns, tempo):
     """Function to generate midi url after uploading to AWS S3."""
-    
     unique_id = str(uuid.uuid4())
     midi_filename = f"output_{unique_id}.mid"
-    
     create_midi(filtrd_comb_notes, onsets, drtns, tempo, output_file=midi_filename)
-    s3_bucket_name = os.getenv("S3_BUCKET_NAME")
-
-    s3 = boto3.client('s3')
 
     try:
         local_midi_file_path = f'static/{midi_filename}'
@@ -136,7 +129,6 @@ def create_and_store_midi_in_s3(filtrd_comb_notes, onsets, drtns, tempo):
         s3.upload_file(local_midi_file_path, s3_bucket_name, midi_filename)
 
         midi_url = f"https://{s3_bucket_name}.s3.amazonaws.com/{midi_filename}"
-        
         if os.path.exists(local_midi_file_path):
             os.remove(local_midi_file_path)
             print(f"Successfully deleted local file: {local_midi_file_path}")
@@ -144,15 +136,14 @@ def create_and_store_midi_in_s3(filtrd_comb_notes, onsets, drtns, tempo):
             print(f"Local file not found for deletion: {local_midi_file_path}")
 
         return midi_url
-    
     except FileNotFoundError:
         print("The MIDI file was not found")
         raise
     except NoCredentialsError:
         print("AWS credentials not available")
         raise
-    
-    
+
+
 @app.route("/process", methods=["POST"])
 def process_data():
     """Route to process the data."""
@@ -191,8 +182,9 @@ def process_data():
         # midi_url = generate_midi_url(
         #     filtered_and_combined_notes, onsets, durations, tempo
         # )
-        
-        midi_url = create_and_store_midi_in_s3(filtered_and_combined_notes, onsets, durations, tempo) 
+        midi_url = create_and_store_midi_in_s3(
+            filtered_and_combined_notes, onsets, durations, tempo
+        )
         return jsonify({"midi_url": midi_url})
         # store file in database, grab from there and show.
 
@@ -281,7 +273,7 @@ def detect_note_onsets(audio_file):
 #     return durations
 # Because PyLint said I had to use enumerate... :/
 
- 
+
 def estimate_note_durations(onsets, y, sr=44100, threshold=0.025):
     """
     Estimate note durations using onsets and amplitude envelope.
@@ -369,7 +361,7 @@ def create_midi(filtered_notes, onsets, durations, tempo, output_file="output.mi
     logging.info("Starting to create MIDI file.")
     if tempo <= 0:
         logging.warning("Invalid tempo detected. Setting default tempo.")
-        tempo = 120  
+        tempo = 120
     static_dir = os.path.join(app.root_path, "static")
     if not os.path.exists(static_dir):
         os.makedirs(static_dir)

@@ -1,12 +1,12 @@
 """Web-app."""
 import os
-from flask import Flask, url_for, redirect, render_template, session, request, jsonify, Response
+from flask import Flask, url_for, redirect, render_template, session, request, jsonify
 import requests
 from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 from flask_session import Session
-import boto3 
+import boto3
 from bson import ObjectId
 
 
@@ -14,16 +14,16 @@ from bson import ObjectId
 app = Flask(__name__)
 load_dotenv()
 
-# Initialize S3 client
-aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
-aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
-s3_bucket_name = os.getenv("S3_BUCKET_NAME")
+# Initialize S3 client - commented out for now due to pylint
+# aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
+# aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+# s3_bucket_name = os.getenv("S3_BUCKET_NAME")
 
-s3 = boto3.client(
-    's3',
-    aws_access_key_id=aws_access_key_id,
-    aws_secret_access_key=aws_secret_access_key
-)
+# s3 = boto3.client(
+#     's3',
+#     aws_access_key_id=aws_access_key_id,
+#     aws_secret_access_key=aws_secret_access_key
+# )
 
 # Monitors Flask's session management: Uses a secret key to sign and encrypt session data
 # Secret key is essential for the proper functioning of user sessions in your Flask application.
@@ -82,7 +82,7 @@ def upload_midi():
 
     try:
         user_id_obj = ObjectId(user_id)
-    except:
+    except TypeError:
         return jsonify({"error": "Invalid User ID"}), 400
 
     user = database.users.find_one({"_id": user_id_obj})
