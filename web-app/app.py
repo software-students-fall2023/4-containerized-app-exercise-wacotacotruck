@@ -6,6 +6,7 @@ from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 from flask_session import Session
+import logging
 
 # import boto3
 from bson import ObjectId
@@ -35,21 +36,24 @@ app.config["SESSION_TYPE"] = "filesystem"
 sess.init_app(app)
 
 # Establish a database connection with the MONGO_URI (MongoDB Atlas connection)
-client = MongoClient(os.getenv("MONGO_URI"))
+# client = MongoClient(os.getenv("MONGO_URI"))
 
 # Checks if the connection has been made, else make an error printout
-try:
-    client.admin.command("ping")
-    database = client[os.getenv("MONGO_DBNAME")]
-    print("* Connected to MongoDB!")
-except ConnectionError as err:
-    print('* "Failed to connect to MongoDB at', os.getenv("MONGO_URI"))
-    print("Database connection error:", err)
+# try:
+#     client.admin.command("ping")
+#     database = client[os.getenv("MONGO_DBNAME")]
+#     print("* Connected to MongoDB!")
+# except ConnectionError as err:
+#     print('* "Failed to connect to MongoDB at', os.getenv("MONGO_URI"))
+#     print("Database connection error:", err)
 
 # except Exception as err:
 #     print('* "Failed to connect to MongoDB at', os.getenv("MONGO_URI"))
 #     print("Database connection error:", err)
 
+# Connect to MongoDB
+client = MongoClient("db", 27017)
+database = client["database"]
 
 # Routes
 @app.route("/")
@@ -104,8 +108,14 @@ def upload_midi():
 
 def call_ml_client(data):
     """Contacts the ml client"""
-    response = requests.post("http://localhost:5002/process", json=data, timeout=10)
-    return response.json()
+    if "user_id" in session: 
+        data["user_id"] = session.get("user_id")
+        logging.info("Sending data to ML Client:", data)
+        response = requests.post("http://localhost:5002/process", json=data, timeout=10)
+        return response.json()
+    else:
+        logging.info("User not logged in.")
+        return "Log in first!"
 
 
 # This is the function which registers the signup page from the login.html page
@@ -157,8 +167,8 @@ def signup():
         password_hash = generate_password_hash(password)
 
         # Here we insert their account details to the database
-        collection = database["users"]
-        collection.insert_one(
+        user_collection = database["users"]
+        user_collection.insert_one(
             {
                 "username": username,
                 "password": password_hash,

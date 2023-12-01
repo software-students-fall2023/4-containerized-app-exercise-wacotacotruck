@@ -15,7 +15,8 @@ import soundfile as sf
 import numpy as np
 import boto3
 from botocore.exceptions import NoCredentialsError
-
+from pymongo import MongoClient
+from bson import ObjectId
 
 app = Flask(__name__)
 
@@ -35,6 +36,10 @@ s3 = boto3.client(
     aws_secret_access_key=aws_secret_access_key,
 )
 
+# Connect to MongoDB
+client = MongoClient("db", 27017)
+db = client["database"]
+collection = db["midifiles"]
 
 def frequency_to_note_name(frequency):
     """Convert a frequency in Hertz to a musical note name."""
@@ -144,6 +149,9 @@ def create_and_store_midi_in_s3(filtrd_comb_notes, onsets, drtns, tempo):
         print("AWS credentials not available")
         raise
 
+def store_in_db(user_id, username, midi_url):
+    data = {"user_id": user_id, "username": username, "url": midi_url}
+    collection.insert_one(data)
 
 @app.route("/process", methods=["POST"])
 def process_data():
@@ -186,6 +194,22 @@ def process_data():
         midi_url = create_and_store_midi_in_s3(
             filtered_and_combined_notes, onsets, durations, tempo
         )
+
+        logging.info("Received request: %s", request.json)
+        logging.info("Received request data: %s", request.data)
+
+        if not request.json:
+            logging.info("No JSON data received.")
+            return jsonify({"error": "Request must be JSON"}), 400
+
+        user_id = request.json.get("username")
+        if not user_id:
+            logging.info("Missing user_id.")
+            return jsonify({"error": "Missing user_id."}), 400
+        
+        username = find_username(user_id)
+        store_in_db(user_id, username, midi_url)
+
         return jsonify({"midi_url": midi_url})
         # store file in database, grab from there and show.
 
@@ -196,6 +220,16 @@ def process_data():
         app.logger.error("Value error occurred: %s", val_err)
         return jsonify({"error": str(val_err)}), 500
 
+def find_username(user_id):
+    user_id_obj = ObjectId("some_user_id")
+    user_collection = db["users"]
+    user_doc = user_collection.find_one({"_id": user_id_obj})
+    if user_doc:
+        username = user_doc.get("username")
+        logging.info("Found username.")
+        return username
+    else:
+        logging.info("User not found.")
 
 def smooth_pitch_data(notes_data, window_size=5):
     """smoothing pitch data."""
@@ -287,7 +321,6 @@ def estimate_note_durations(onsets, y, sr=44100, threshold=0.025):
         onset_sample = int(onset * sr)
         next_onset_sample = int(onsets[i + 1] * sr)
 
-        # Rest of your logic remains the same
         end_sample = next_onset_sample
         for j in range(onset_sample, next_onset_sample, 512):
             # 512 is the hop length used in envelope calculation
