@@ -30,6 +30,9 @@ jobs:
         run: |
             pipenv install -e .
 
+      - name: Set PYTHONPATH
+        run: echo "::add-path::${{ github.workspace }}/machine_learning_client"
+
       - name: Testing with pytest
         run: |
           cd machine_learning_client
