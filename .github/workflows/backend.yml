@@ -32,5 +32,5 @@ jobs:
 
       - name: Testing with pytest
         run: |
-          cd machine_learning_client/tests
-          pipenv run python -m pytest
+          cd machine_learning_client
+          pipenv run python -m pytest tests

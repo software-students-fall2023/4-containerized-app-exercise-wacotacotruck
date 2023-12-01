@@ -1,9 +1,9 @@
 """Module for Testing Python Functions"""
 import os
+from unittest.mock import MagicMock
 import pytest
 import numpy as np
 import pretty_midi
-from unittest.mock import MagicMock
 from machine_learning_client import ml
 
 
