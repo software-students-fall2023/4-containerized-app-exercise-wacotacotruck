@@ -21,7 +21,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install --user pipenv
           pipenv --python ${{ matrix.python-version }}
-          cd machine_learning_client
+          cd machine-learning-client
           pipenv install --dev
           pipenv lock
           pipenv install -r requirements.txt
@@ -29,9 +29,6 @@ jobs:
       - name: Turn on 'editable' mode
         run: |
             pipenv install -e .
-
-      - name: Set PYTHONPATH
-        run: echo "PYTHONPATH=${{ github.workspace }}/machine_learning_client" >> $GITHUB_ENV
 
       - name: Testing with pytest
         run: |
