@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 import pytest
 import numpy as np
 import pretty_midi
-from machine_learning_client import ml
+from .. import ml
 
 
 class Tests:
