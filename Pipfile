@@ -25,6 +25,7 @@ soundfile = "*"
 ffmpeg = "*"
 tensorflow = "*"
 pysoundfile = "*"
+coverage = "*"
 
 [dev-packages]
 
