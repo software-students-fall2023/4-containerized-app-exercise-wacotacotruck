@@ -33,9 +33,10 @@ jobs:
       - name: Testing with pytest
         run: |
           cd machine_learning_client/tests
+          sudo apt-get install libsndfile1
           pipenv run python -m pytest
-      
-      - name: Run code coverage analysis
+
+      - name: Coverage Report
         run: |
           pipenv run python -m coverage run -m pytest
           pipenv run python -m coverage report --include=*.py --fail-under=80
