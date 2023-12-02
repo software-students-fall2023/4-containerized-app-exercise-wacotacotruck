@@ -28,7 +28,6 @@ class Tests:
         actual = True
         assert actual == expected, "Expected it to always be True!"
 
-<<<<<<< HEAD
     # Test for frequency_to_note_name
     def test_frequency_to_note_name(self):
         """Provided valid frequency, return note name."""
@@ -152,7 +151,7 @@ class Tests:
             "G9",
         ]
         assert actual in midi_note_names
-=======
+
     # This function is producing 7 warnings about Deprecation, not sure how to remove these...
     def test_estimate_tempo(self):
         """
@@ -268,4 +267,3 @@ class Tests:
             os.path.join("machine_learning_client", "static", "output.mid")
             == expected_filepath
         )
->>>>>>> cfe6708b6f28772e540a0bf0bcd0e16f9a5b3e60
