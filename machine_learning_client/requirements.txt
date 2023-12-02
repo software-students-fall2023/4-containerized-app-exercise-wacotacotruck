@@ -12,3 +12,4 @@ pytest
 PySoundFile
 python-dotenv
 boto3
+coverage
