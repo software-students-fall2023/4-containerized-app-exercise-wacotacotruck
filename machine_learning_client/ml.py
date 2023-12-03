@@ -163,8 +163,7 @@ def store_in_db(user_id, username, midi_url):
 def process_data():
     """Route to process the data."""
     try:
-        validate_and_get_file(audio)
-
+        validate_and_get_file(request)
         file = request.files["audio"]
 
         # Retrieve user ID from the form data
@@ -192,7 +191,7 @@ def process_data():
         logging.info("Chunked notes data for jsonify: %s", notes_data_sorted)
 
         # Further processing on notes data
-        filtered_and_combined_notes = process_notes(notes_data)
+        # filtered_and_combined_notes = process_notes(notes_data)
 
         # Load the audio file first to get y and sr
         y, sr = librosa.load(wav_file, sr=44100)
@@ -213,7 +212,7 @@ def process_data():
         #     filtered_and_combined_notes, onsets, durations, tempo
         # )
         midi_url = create_and_store_midi_in_s3(
-            filtered_and_combined_notes, onsets, durations, estimate_tempo(wav_file)
+            process_notes(notes_data), onsets, durations, estimate_tempo(wav_file)
         )
 
         if user_id:
@@ -230,6 +229,7 @@ def process_data():
         return jsonify({"error": str(val_err)}), 500
 
 def validate_and_get_file(request):
+    """Making process data use less locals cuz pylint :)"""
     if "audio" not in request.files:
         raise ValueError("No audio file found in the request")
     return request.files["audio"]

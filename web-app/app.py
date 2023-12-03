@@ -1,7 +1,7 @@
 """Web-app."""
 import os
 
-# import logging
+import logging
 from flask import Flask, url_for, redirect, render_template, session, request, jsonify
 import requests
 from pymongo import MongoClient
@@ -11,7 +11,6 @@ from flask_session import Session
 
 import boto3
 from bson import ObjectId
-import logging
 from botocore.exceptions import ClientError
 
 # Initializes Flask application and loads the .env file from the MongoDB Atlas Database
@@ -95,10 +94,7 @@ def cleanup():
             s3.delete_object(Bucket=s3_bucket_name, Key=key)
             app.logger.info(f"Deleted orphan file: {url}")
     except ClientError as e:
-        logging.error(f"ClientError during S3 operation: {e}")
-        return str(e)
-    except Exception as e:
-        logging.error(f"Error during cleanup: {e}")
+        logging.error(f"ClientError during S3 operation: %s", e)
         return str(e)
 
     return "cleanup completed"
