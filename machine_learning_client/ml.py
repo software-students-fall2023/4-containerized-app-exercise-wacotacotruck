@@ -204,7 +204,7 @@ def process_data():
         durations = estimate_note_durations(onsets, y, sr=44100)
 
         # Estimate tempo
-        # tempo = estimate_tempo(wav_file)
+        tempo = estimate_tempo(wav_file)
 
         # Clean up temporary files
         clean_up_files(webm_file, wav_file)
@@ -213,7 +213,7 @@ def process_data():
         #     filtered_and_combined_notes, onsets, durations, tempo
         # )
         midi_url = create_and_store_midi_in_s3(
-            process_notes(notes_data), onsets, durations, estimate_tempo(wav_file)
+            process_notes(notes_data), onsets, durations, tempo
         )
 
         if user_id:
@@ -222,12 +222,12 @@ def process_data():
         return jsonify({"midi_url": midi_url})
         # store file in database, grab from there and show.
 
-    except IOError as io_err:
-        app.logger.error("IO error occurred: %s", io_err)
-        return jsonify({"error": str(io_err)}), 500
-    except ValueError as val_err:
-        app.logger.error("Value error occurred: %s", val_err)
-        return jsonify({"error": str(val_err)}), 500
+    except IOError as e:
+        app.logger.error("IO error occurred: %s", e)
+        return jsonify({"error": str(e)}), 500
+    except ValueError as e:
+        app.logger.error("Value error occurred: %s", e)
+        return jsonify({"error": str(e)}), 500
 
 
 def find_username(user_id):
