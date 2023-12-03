@@ -105,6 +105,24 @@ def upload_midi():
 
     return jsonify({"message": "MIDI URL uploaded successfully"}), 200
 
+# Allowing users to see their own midis here
+@app.route("/mymidi", methods=["GET", "POST"])
+def mymidi():
+    """Renders the mymidi page"""
+    if "user_id" in session:
+        midi_collection = database["midis"]
+
+        # Retreive user_id from session
+        user_id = session["user_id"]
+
+        # Find the MIDI files belonging to the user
+        user_posts = midi_collection.find({"user_id": user_id})
+        
+        return render_template("mymidi.html", user_posts=list(user_posts))
+    
+    else:
+        return render_template("login.html")
+
 
 def call_ml_client(data):
     """Contacts the ml client"""

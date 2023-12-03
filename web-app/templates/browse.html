@@ -14,6 +14,10 @@
         <a href="{{ url_for('index') }}"><button class="button"><i class="material-icons">home</i></button></a>
     </div>
 
+    <div class="mymidi-button">
+        <a href="{{ url_for('mymidi') }}"><button class="button"><i class="material-icons">music_note</i></button></a>
+    </div>
+
     <div class="auth-buttons">
         {% if 'user_id' not in session %}
             <a href="{{ url_for('login') }}"><button class="button" id="login" title="login">Login</button></a>

@@ -1,0 +1,17 @@
+[TYPECHECK]
+generated-members=
+    logger.debug,
+    logger.info,
+    logger.warning,
+    logger.error,
+    logger.exception,
+    app.logger.debug,
+    app.logger.info,
+    app.logger.warning,
+    app.logger.error,
+    app.logger.exception,
+    APP.logger.debug,
+    APP.logger.info,
+    APP.logger.warning,
+    APP.logger.error,
+    APP.logger.exception

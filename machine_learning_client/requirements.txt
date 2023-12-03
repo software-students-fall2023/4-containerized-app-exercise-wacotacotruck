@@ -1,7 +1,7 @@
 crepe
 pretty_midi
-Flask==2.0.1
-Werkzeug==2.0.1
+Flask==3.0.0
+Werkzeug==3.0.0
 Flask-Cors==3.0.10
 soundfile 
 numpy
@@ -10,6 +10,7 @@ tensorflow
 librosa
 pytest
 PySoundFile
-python-dotenv
+python-dotenv==0.16.0
 boto3
+coverage
 pymongo

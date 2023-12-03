@@ -8,12 +8,12 @@ services:
       - "5001:5000"
   ml-client:
     build:
-      context: ./machine-learning-client
+      context: ./machine_learning_client
       dockerfile: dockerfile.ml
     ports:
       - "5002:5002"
     volumes:
-      - ./machine-learning-client:/machine-learning-client
+      - ./machine_learning_client:/machine_learning_client
   db:
     image: mongo:4.0-xenial
     ports:

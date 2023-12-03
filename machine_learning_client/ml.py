@@ -300,15 +300,6 @@ def detect_note_onsets(audio_file):
     return onsets
 
 
-# def estimate_note_durations(onsets, audio_length):
-#     durations = np.diff(onsets, append=audio_length)
-
-
-#     logging.info("durations: " + str(durations))
-#     return durations
-# Because PyLint said I had to use enumerate... :/
-
-
 def estimate_note_durations(onsets, y, sr=44100, threshold=0.025):
     """
     Estimate note durations using onsets and amplitude envelope.
@@ -347,32 +338,15 @@ def estimate_note_durations(onsets, y, sr=44100, threshold=0.025):
     return durations
 
 
-# def estimate_tempo(audio_file):
-#     y, sr = librosa.load(audio_file, sr=None)
-#     tempo, _ = librosa.beat.beat_track(y, sr=sr)
-
-#     logging.info("tempo: " + str(tempo))
-#     return tempo
-
-
 def estimate_tempo(audio_file):
     """
     Estimating tempo for better time mapping
     """
     y, sr = librosa.load(audio_file, sr=44100)
-    # Correct usage of beat_track with keyword arguments
     tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
 
-    logging.info("tempo: %s", tempo)  # Use lazy % formatting
+    logging.info("tempo: %s", tempo)
     return tempo
-
-
-# def calculate_amplitude_envelope(y, sr=44100, frame_size=1024, hop_length=512):
-#     """
-#     Calculate the amplitude envelope of an audio signal with a given frame size and hop length.
-#     """
-#     amplitude_envelope = np.array([max(y[i:i+frame_size]) for i in range(0, len(y), hop_length)])
-#     return amplitude_envelope
 
 
 def calculate_amplitude_envelope(y, frame_size=1024, hop_length=512):
@@ -401,7 +375,6 @@ def create_midi(filtered_notes, onsets, durations, tempo, output_file="output.mi
         os.makedirs(static_dir)
     midi_file_path = os.path.join(static_dir, output_file)
     midi_data = pretty_midi.PrettyMIDI(initial_tempo=tempo)
-    # midi_data.estimate_tempo = tempo
     instrument = create_midi_instrument(filtered_notes, onsets, durations)
     midi_data.instruments.append(instrument)
     midi_data.write(midi_file_path)

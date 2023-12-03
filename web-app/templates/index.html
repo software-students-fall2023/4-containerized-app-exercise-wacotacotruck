@@ -12,7 +12,11 @@
     <body>
         <div class="browse-button">
             <a href="{{ url_for('browse') }}"><button class="button"><i class="material-icons">explore</i></button></a>
-        </div>        
+        </div>  
+
+        <div class="mymidi-button">
+            <a href="{{ url_for('mymidi') }}"><button class="button"><i class="material-icons">music_note</i></button></a>
+        </div>
 
         <div class="auth-buttons">
             {% if 'user_id' not in session %}
