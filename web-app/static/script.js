@@ -47,7 +47,7 @@ function sendAudioToServer(audioBlob) {
       return response.json();
     })
     .then((data) => {
-      console.log("Server response:", data);
+      //console.log("Server response:", data);
       displayMidiLink(data.midi_url);
     })
     .catch((error) => {
@@ -132,6 +132,7 @@ function displayMidiLink(midiUrl) {
     console.error("midi url is undefined");
     return;
   }
+  // console.log(midiUrl); 
   const midiPlayer = document.querySelector("midi-player");
   const midiVisualizer = document.getElementById("myVisualizer");
 

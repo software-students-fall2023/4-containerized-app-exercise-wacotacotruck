@@ -1,14 +1,15 @@
 """Web-app."""
 import os
+
+# import logging
 from flask import Flask, url_for, redirect, render_template, session, request, jsonify
 import requests
 from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 from flask_session import Session
-import logging
 
-# import boto3
+import boto3
 from bson import ObjectId
 
 
@@ -17,15 +18,15 @@ app = Flask(__name__)
 load_dotenv()
 
 # Initialize S3 client - commented out for now due to pylint
-# aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
-# aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
+aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
 s3_bucket_name = os.getenv("S3_BUCKET_NAME")
 
-# s3 = boto3.client(
-#     's3',
-#     aws_access_key_id=aws_access_key_id,
-#     aws_secret_access_key=aws_secret_access_key
-# )
+s3 = boto3.client(
+    "s3",
+    aws_access_key_id=aws_access_key_id,
+    aws_secret_access_key=aws_secret_access_key,
+)
 
 # Monitors Flask's session management: Uses a secret key to sign and encrypt session data
 # Secret key is essential for the proper functioning of user sessions in your Flask application.
@@ -55,6 +56,7 @@ sess.init_app(app)
 client = MongoClient("db", 27017)
 database = client["database"]
 
+
 # Routes
 @app.route("/")
 def index():
@@ -65,9 +67,30 @@ def index():
 @app.route("/browse")
 def browse():
     """Renders the browse page"""
+    cleanup()
     midi_collection = database["midis"]
     midi_posts = midi_collection.find({})
     return render_template("browse.html", midi_posts=list(midi_posts))
+
+
+def cleanup():
+    """Function to cleanup S3"""
+    midi_collection = database["midis"]
+    midi_urls = {midi["midi_url"] for midi in midi_collection.find()}
+
+    s3_files = s3.list_objects_v2(Bucket=s3_bucket_name).get("Contents", [])
+    s3_urls = {
+        f"https://{s3_bucket_name}.s3.amazonaws.com/{file['Key']}" for file in s3_files
+    }
+
+    orphan_files = s3_urls - midi_urls
+
+    for url in orphan_files:
+        key = url.split("/")[-1]
+        s3.delete_object(Bucket=s3_bucket_name, Key=key)
+        app.logger.info(f"Deleted orphan file: {url}")
+
+    return "cleanup completed"
 
 
 @app.route("/upload-midi", methods=["POST"])
@@ -105,6 +128,7 @@ def upload_midi():
 
     return jsonify({"message": "MIDI URL uploaded successfully"}), 200
 
+
 # Allowing users to see their own midis here
 @app.route("/mymidi", methods=["GET", "POST"])
 def mymidi():
@@ -117,23 +141,21 @@ def mymidi():
 
         # Find the MIDI files belonging to the user
         user_posts = midi_collection.find({"user_id": user_id}).sort("created_at", -1)
-        
         return render_template("mymidi.html", user_posts=list(user_posts))
-    
-    else:
-        return render_template("login.html")
+    return render_template("login.html")
 
 
 def call_ml_client(data):
     """Contacts the ml client"""
-    if "user_id" in session: 
+    if "user_id" in session:
         data["user_id"] = session.get("user_id")
-        logging.info("Sending data to ML Client:", data)
+        # logging.info("Sending data to ML Client:", data)
         response = requests.post("http://localhost:5002/process", json=data, timeout=10)
         return response.json()
-    else:
-        logging.info("User not logged in.")
-        return "Log in first!"
+    # else:
+    #     logging.info("User not logged in.")
+    return "Log in first!"
+
 
 # def call_ml_client(data):
 #     """Contacts the ml client"""

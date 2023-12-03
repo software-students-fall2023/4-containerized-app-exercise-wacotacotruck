@@ -15,3 +15,5 @@ generated-members=
     APP.logger.warning,
     APP.logger.error,
     APP.logger.exception
+[MESSAGES CONTROL]
+disable=duplicate-code

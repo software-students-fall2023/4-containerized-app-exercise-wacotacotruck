@@ -16,7 +16,8 @@ import numpy as np
 import boto3
 from botocore.exceptions import NoCredentialsError
 from pymongo import MongoClient
-from bson import ObjectId
+
+# from bson import ObjectId
 
 app = Flask(__name__)
 
@@ -152,6 +153,7 @@ def create_and_store_midi_in_s3(filtrd_comb_notes, onsets, drtns, tempo):
 
 
 def store_in_db(user_id, username, midi_url):
+    """Function to save to the database."""
     data = {"user_id": user_id, "username": username, "url": midi_url}
     collection.insert_one(data)
 
@@ -233,16 +235,17 @@ def process_data():
         return jsonify({"error": str(val_err)}), 500
 
 
-def find_username(user_id):
-    user_id_obj = ObjectId("some_user_id")
-    user_collection = db["users"]
-    user_doc = user_collection.find_one({"_id": user_id_obj})
-    if user_doc:
-        username = user_doc.get("username")
-        logging.info("Found username.")
-        return username
-    else:
-        logging.info("User not found.")
+# def find_username():
+#     """Function to find username by user id."""
+#     user_id_obj = ObjectId("some_user_id")
+#     user_collection = db["users"]
+#     user_doc = user_collection.find_one({"_id": user_id_obj})
+#     if user_doc:
+#         username = user_doc.get("username")
+#         logging.info("Found username.")
+#         return username
+#     else:
+#          logging.info("User not found.")
 
 
 def smooth_pitch_data(notes_data, window_size=5):
