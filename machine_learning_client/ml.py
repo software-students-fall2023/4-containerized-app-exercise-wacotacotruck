@@ -16,8 +16,7 @@ import numpy as np
 import boto3
 from botocore.exceptions import NoCredentialsError
 from pymongo import MongoClient
-
-# from bson import ObjectId
+from bson import ObjectId
 
 app = Flask(__name__)
 
@@ -156,6 +155,7 @@ def store_in_db(user_id, username, midi_url):
     """Function to save to the database."""
     data = {"user_id": user_id, "username": username, "url": midi_url}
     collection.insert_one(data)
+    logging.info(f"Inserted file by {username}")
 
 
 @app.route("/process", methods=["POST"])
@@ -166,6 +166,13 @@ def process_data():
             return jsonify({"error": "No audio file found in the request"}), 400
 
         file = request.files["audio"]
+
+        # Retrieve user ID from the form data
+        if file:
+            try:
+                user_id = request.form.get('user_id')
+            except Exception as e:
+                logging.info(e)
 
         # Check MIME type
         if file.content_type != "audio/webm":
@@ -209,20 +216,9 @@ def process_data():
             filtered_and_combined_notes, onsets, durations, tempo
         )
 
-        # logging.info("Received request: %s", request.json)
-        # logging.info("Received request data: %s", request.data)
-
-        # if not request.json:
-        #     logging.info("No JSON data received.")
-        #     return jsonify({"error": "Request must be JSON"}), 400
-
-        # user_id = request.json.get("user_id")
-        # if not user_id:
-        #     logging.info("Missing user_id.")
-        #     return jsonify({"error": "Missing user_id."}), 400
-
-        # username = find_username(user_id)
-        # store_in_db(user_id, username, midi_url)
+        if user_id:
+            username = find_username(user_id)
+            store_in_db(user_id, username, midi_url)
 
         return jsonify({"midi_url": midi_url})
         # store file in database, grab from there and show.
@@ -235,17 +231,17 @@ def process_data():
         return jsonify({"error": str(val_err)}), 500
 
 
-# def find_username():
-#     """Function to find username by user id."""
-#     user_id_obj = ObjectId("some_user_id")
-#     user_collection = db["users"]
-#     user_doc = user_collection.find_one({"_id": user_id_obj})
-#     if user_doc:
-#         username = user_doc.get("username")
-#         logging.info("Found username.")
-#         return username
-#     else:
-#          logging.info("User not found.")
+def find_username(user_id):
+    """Function to find username by user id."""
+    user_id_obj = ObjectId(user_id)
+    user_collection = db["users"]
+    user_doc = user_collection.find_one({"_id": user_id_obj})
+    if user_doc:
+        username = user_doc.get("username")
+        logging.info("Found username.")
+        return username
+    else:
+         logging.info("User not found.")
 
 
 def smooth_pitch_data(notes_data, window_size=5):

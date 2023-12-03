@@ -11,7 +11,8 @@ from flask_session import Session
 
 import boto3
 from bson import ObjectId
-
+import logging
+from botocore.exceptions import ClientError
 
 # Initializes Flask application and loads the .env file from the MongoDB Atlas Database
 app = Flask(__name__)
@@ -61,6 +62,9 @@ database = client["database"]
 @app.route("/")
 def index():
     """Renders the home page"""
+    if "user_id" in session:
+        user_id = session.get("user_id")
+        return render_template("index.html", user_id = user_id)
     return render_template("index.html")
 
 
@@ -75,20 +79,27 @@ def browse():
 
 def cleanup():
     """Function to cleanup S3"""
-    midi_collection = database["midis"]
-    midi_urls = {midi["midi_url"] for midi in midi_collection.find()}
+    try:
+        midi_collection = database["midis"]
+        midi_urls = {midi["midi_url"] for midi in midi_collection.find()}
 
-    s3_files = s3.list_objects_v2(Bucket=s3_bucket_name).get("Contents", [])
-    s3_urls = {
-        f"https://{s3_bucket_name}.s3.amazonaws.com/{file['Key']}" for file in s3_files
-    }
+        s3_files = s3.list_objects_v2(Bucket=s3_bucket_name).get("Contents", [])
+        s3_urls = {
+            f"https://{s3_bucket_name}.s3.amazonaws.com/{file['Key']}" for file in s3_files
+        }
 
-    orphan_files = s3_urls - midi_urls
+        orphan_files = s3_urls - midi_urls
 
-    for url in orphan_files:
-        key = url.split("/")[-1]
-        s3.delete_object(Bucket=s3_bucket_name, Key=key)
-        app.logger.info(f"Deleted orphan file: {url}")
+        for url in orphan_files:
+            key = url.split("/")[-1]
+            s3.delete_object(Bucket=s3_bucket_name, Key=key)
+            app.logger.info(f"Deleted orphan file: {url}")
+    except ClientError as e:
+        logging.error(f"ClientError during S3 operation: {e}")
+        return str(e)
+    except Exception as e:
+        logging.error(f"Error during cleanup: {e}")
+        return str(e)
 
     return "cleanup completed"
 

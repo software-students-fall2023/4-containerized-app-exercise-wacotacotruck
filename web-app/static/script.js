@@ -28,12 +28,14 @@ function handleDataAvailable(event) {
 
 function handleStop() {
   const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
-  sendAudioToServer(audioBlob);
+  const userID = getCurrentUserID();
+  sendAudioToServer(audioBlob, userID);
 }
 
-function sendAudioToServer(audioBlob) {
+function sendAudioToServer(audioBlob, userID) {
   let formData = new FormData();
   formData.append("audio", audioBlob, "recording.webm");
+  formData.append("user_id", userID);
   showLoader();
 
   fetch("http://localhost:5002/process", {
@@ -56,6 +58,10 @@ function sendAudioToServer(audioBlob) {
     .finally(() => {
       hideLoader();
     });
+}
+
+function getCurrentUserID(){
+  return currentUserID;
 }
 
 function showLoader() {
