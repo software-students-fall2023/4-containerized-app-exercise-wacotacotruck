@@ -527,3 +527,45 @@ class Tests:
             os.path.join("machine_learning_client", "static", "output.mid")
             == expected_filepath
         )
+        
+    @patch("machine_learning_client.ml.create_midi")
+    def test_generate_midi_url_error(self, mock_create_midi):
+        """Test generating MIDI URL with an error in creating MIDI."""
+        mock_create_midi.side_effect = Exception("MIDI creation failed")
+
+        filtered_combined_notes = ["C", "D", "E"]  # Example note data
+        onsets = [0.1, 0.5, 1.0]  # Example onset times
+        durations = [0.4, 0.5, 0.6]  # Example note durations
+        tempo = 120  # Example tempo
+
+        with pytest.raises(ValueError) as exc_info:
+            ml.generate_midi_url(
+                filtered_combined_notes, onsets, durations, tempo
+            )
+
+        assert "Failed to create MIDI file" in str(exc_info.value)
+    
+    def test_estimate_note_durations_no_onsets(self):
+        """Test estimating note durations with no onsets."""
+        onsets = []  # Empty list of onsets
+        y = np.random.randn(44100)  # Mock audio signal with 1-second duration
+
+        durations = ml.estimate_note_durations(onsets, y, sr=44100, threshold=0.025)
+
+        assert durations == [], "Durations should be an empty list with no onsets."
+    
+    def test_calculate_amplitude_envelope_zeros(self):
+        """Test calculating amplitude envelope for signal with all zero values."""
+        test_signal = np.zeros(10)  # Signal with all zero values
+
+        envelope = ml.calculate_amplitude_envelope(
+            test_signal, frame_size=3, hop_length=3
+        )
+
+        expected_envelope = np.zeros(4)  # Expected envelope with all zero values
+
+        assert np.array_equal(envelope, expected_envelope), "Envelopes should be all zero."
+
+
+
+    

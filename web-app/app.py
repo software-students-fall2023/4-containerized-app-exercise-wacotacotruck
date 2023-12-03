@@ -79,8 +79,10 @@ def browse():
 def cleanup():
     """Function to cleanup S3"""
     try:
-        midi_collection = database["midis"]
-        midi_urls = {midi["midi_url"] for midi in midi_collection.find()}
+        midi_urls = set()
+        if "midis" in database.list_collection_names():  
+            midi_collection = database["midis"]
+            midi_urls = {midi["midi_url"] for midi in midi_collection.find()}
 
         s3_files = s3.list_objects_v2(Bucket=s3_bucket_name).get("Contents", [])
         s3_urls = {
@@ -93,7 +95,7 @@ def cleanup():
         for url in orphan_files:
             key = url.split("/")[-1]
             s3.delete_object(Bucket=s3_bucket_name, Key=key)
-            app.logger.info("Deleted orphan file: {url}")
+            app.logger.info(f"Deleted orphan file: {url}")
 
         return "cleanup completed"
     except ClientError as e:
