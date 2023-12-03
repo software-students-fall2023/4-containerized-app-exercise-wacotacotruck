@@ -170,7 +170,7 @@ def process_data():
         # Retrieve user ID from the form data
         if file:
             try:
-                user_id = request.form.get('user_id')
+                user_id = request.form.get("user_id")
             except BadRequest as e:
                 logging.info("Bad request error: %s", e)
 
@@ -228,6 +228,7 @@ def process_data():
     except ValueError as val_err:
         app.logger.error("Value error occurred: %s", val_err)
         return jsonify({"error": str(val_err)}), 500
+
 
 def find_username(user_id):
     """Function to find username by user id."""

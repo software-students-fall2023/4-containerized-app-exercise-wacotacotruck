@@ -63,7 +63,7 @@ def index():
     """Renders the home page"""
     if "user_id" in session:
         user_id = session.get("user_id")
-        return render_template("index.html", user_id = user_id)
+        return render_template("index.html", user_id=user_id)
     return render_template("index.html")
 
 
@@ -84,7 +84,8 @@ def cleanup():
 
         s3_files = s3.list_objects_v2(Bucket=s3_bucket_name).get("Contents", [])
         s3_urls = {
-            f"https://{s3_bucket_name}.s3.amazonaws.com/{file['Key']}" for file in s3_files
+            f"https://{s3_bucket_name}.s3.amazonaws.com/{file['Key']}"
+            for file in s3_files
         }
 
         orphan_files = s3_urls - midi_urls
