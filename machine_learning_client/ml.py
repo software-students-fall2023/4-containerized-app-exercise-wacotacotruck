@@ -343,6 +343,7 @@ def estimate_note_durations(onsets, y, sr=44100, threshold=0.025):
     Estimate note durations using onsets and amplitude envelope.
     """
     amp_env = calculate_amplitude_envelope(y, sr)
+    min_duration=0.05
     durations = []
 
     # Iterate over onsets using enumerate
@@ -357,7 +358,8 @@ def estimate_note_durations(onsets, y, sr=44100, threshold=0.025):
                 end_sample = j
                 break
 
-        duration = (end_sample - onset_sample) / sr
+        # Calculate duration with a minimum duration constraint
+        duration = max((end_sample - onset_sample) / sr, min_duration)
         durations.append(duration)
 
     # Handle the last onset separately
@@ -369,7 +371,7 @@ def estimate_note_durations(onsets, y, sr=44100, threshold=0.025):
                 end_sample = j
                 break
 
-        last_duration = (end_sample - last_onset_sample) / sr
+        last_duration = max((end_sample - last_onset_sample) / sr, min_duration)
         durations.append(last_duration)
 
     logging.info("durations: %s", durations)
