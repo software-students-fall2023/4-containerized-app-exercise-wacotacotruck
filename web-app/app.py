@@ -33,8 +33,6 @@ s3 = boto3.client(
 sess = Session()
 app.secret_key = os.getenv("APP_SECRET_KEY")
 app.config["SESSION_TYPE"] = "filesystem"
-app.logger.setLevel(logging.INFO)
-
 sess.init_app(app)
 
 # Establish a database connection with the MONGO_URI (MongoDB Atlas connection)
