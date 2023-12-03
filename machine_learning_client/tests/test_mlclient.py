@@ -527,7 +527,7 @@ class Tests:
             os.path.join("machine_learning_client", "static", "output.mid")
             == expected_filepath
         )
-    
+
     def test_estimate_note_durations_no_onsets(self):
         """Test estimating note durations with no onsets."""
         onsets = []  # Empty list of onsets
@@ -535,8 +535,8 @@ class Tests:
 
         durations = ml.estimate_note_durations(onsets, y, sr=44100, threshold=0.025)
 
-        assert durations == [], "Durations should be an empty list with no onsets."
-    
+        assert not durations, "Durations should be an empty list with no onsets."
+
     def test_calculate_amplitude_envelope_zeros(self):
         """Test calculating amplitude envelope for signal with all zero values."""
         test_signal = np.zeros(10)  # Signal with all zero values
@@ -548,7 +548,4 @@ class Tests:
         expected_envelope = np.zeros(4)  # Expected envelope with all zero values
 
         assert np.array_equal(envelope, expected_envelope), "Envelopes should be all zero."
-
-
-
-    
+        
