@@ -2,6 +2,7 @@
 import os
 
 import logging
+from datetime import datetime
 from flask import Flask, url_for, redirect, render_template, session, request, jsonify
 import requests
 from pymongo import MongoClient
@@ -16,6 +17,8 @@ from botocore.exceptions import ClientError
 # Initializes Flask application and loads the .env file from the MongoDB Atlas Database
 app = Flask(__name__)
 load_dotenv()
+
+logging.basicConfig(level=logging.INFO)
 
 # Initialize S3 client - commented out for now due to pylint
 aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
@@ -37,16 +40,16 @@ app.config["SESSION_TYPE"] = "filesystem"
 sess.init_app(app)
 
 # Establish a database connection with the MONGO_URI (MongoDB Atlas connection)
-# client = MongoClient(os.getenv("MONGO_URI"))
+client_atlas = MongoClient(os.getenv("MONGO_URI"))
 
 # Checks if the connection has been made, else make an error printout
-# try:
-#     client.admin.command("ping")
-#     database = client[os.getenv("MONGO_DBNAME")]
-#     print("* Connected to MongoDB!")
-# except ConnectionError as err:
-#     print('* "Failed to connect to MongoDB at', os.getenv("MONGO_URI"))
-#     print("Database connection error:", err)
+try:
+    client_atlas.admin.command("ping")
+    database_atlas = client_atlas[os.getenv("MONGO_DBNAME")]
+    print("* Connected to MongoDB!")
+except ConnectionError as err:
+    print('* "Failed to connect to MongoDB at', os.getenv("MONGO_URI"))
+    print("Database connection error:", err)
 
 # except Exception as err:
 #     print('* "Failed to connect to MongoDB at', os.getenv("MONGO_URI"))
@@ -70,8 +73,7 @@ def index():
 @app.route("/browse")
 def browse():
     """Renders the browse page"""
-    cleanup()
-    midi_collection = database["midis"]
+    midi_collection = database_atlas["midis"]
     midi_posts = midi_collection.find({})
     return render_template("browse.html", midi_posts=list(midi_posts))
 
@@ -95,7 +97,7 @@ def cleanup():
         for url in orphan_files:
             key = url.split("/")[-1]
             s3.delete_object(Bucket=s3_bucket_name, Key=key)
-            app.logger.info(f"Deleted orphan file: {url}")
+            # app.logger.info(f"Deleted orphan file: {url}")
 
         return "cleanup completed"
     except ClientError as e:
@@ -123,7 +125,7 @@ def upload_midi():
     except TypeError:
         return jsonify({"error": "Invalid User ID"}), 400
 
-    user = database.users.find_one({"_id": user_id_obj})
+    user = database_atlas.users.find_one({"_id": user_id_obj})
 
     if not user:
         return jsonify({"error": "User not found"}), 404
@@ -132,8 +134,13 @@ def upload_midi():
     s3_url = f"https://{s3_bucket_name}.s3.amazonaws.com/{filename}"
 
     # Save the S3 URL with user details
-    midi_collection = database["midis"]
-    midi_data = {"user_id": user_id, "username": user["username"], "midi_url": s3_url}
+    midi_collection = database_atlas["midis"]
+    midi_data = {
+        "user_id": user_id,
+        "username": user["username"],
+        "midi_url": s3_url,
+        "created_at": datetime.utcnow(),
+    }
     midi_collection.insert_one(midi_data)
 
     return jsonify({"message": "MIDI URL uploaded successfully"}), 200
@@ -151,6 +158,8 @@ def mymidi():
 
         # Find the MIDI files belonging to the user
         user_posts = midi_collection.find({"user_id": user_id}).sort("created_at", -1)
+        # user_id_obj = ObjectId(user_id)
+        # user_posts = midi_collection.find({"user_id": user_id_obj}).sort("created_at", -1)
         return render_template("mymidi.html", user_posts=list(user_posts))
     return render_template("login.html")
 
@@ -222,7 +231,7 @@ def signup():
         password_hash = generate_password_hash(password)
 
         # Here we insert their account details to the database
-        user_collection = database["users"]
+        user_collection = database_atlas["users"]
         user_collection.insert_one(
             {
                 "username": username,
@@ -249,33 +258,83 @@ def login():
 
 
 # This function is the backend of the login functionality from the login.html file
+# @app.route("/login_auth", methods=["POST"])
+# def login_auth():
+#     """Route for login authentication"""
+#     # If a user is already logged in, redirect them to the home page
+#     if "user_id" in session:
+#         return redirect(url_for("index"))
+
+#     # Else, ask them to login by inputting a username and password
+#     if request.method == "POST":
+#         username = request.form["username"]
+#         password = request.form["password"]
+#         session["username"] = username
+
+#         errors = []
+
+#         # Once inputted their username and password, check the database for existing users
+#         user = database_atlas.users.find_one({"username": username})
+
+#         # We provide the _id attribute of the user to the user_id in the session
+#         if user and check_password_hash(user["password"], password):
+#             # User sessions to keep track of who's logged in
+#             session["user_id"] = str(user["_id"])
+#             return redirect(url_for("index"))
+
+#         # If the username or password does not match we render the login.html template once more
+#         errors.append("Invalid username or password!")
+#         return render_template("login.html", errors=errors)
+#     return None
+
+
 @app.route("/login_auth", methods=["POST"])
 def login_auth():
     """Route for login authentication"""
-    # If a user is already logged in, redirect them to the home page
     if "user_id" in session:
         return redirect(url_for("index"))
 
-    # Else, ask them to login by inputting a username and password
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
-        session["username"] = username
-
         errors = []
 
-        # Once inputted their username and password, check the database for existing users
-        user = database.users.find_one({"username": username})
+        # cleanup()
+        user_atlas = database_atlas.users.find_one({"username": username})
 
-        # We provide the _id attribute of the user to the user_id in the session
-        if user and check_password_hash(user["password"], password):
-            # User sessions to keep track of who's logged in
-            session["user_id"] = str(user["_id"])
+        if user_atlas and check_password_hash(user_atlas["password"], password):
+            session["user_id"] = str(user_atlas["_id"])
+
+            # clean db before copying from atlas db
+            local_user_collection = database["users"]
+            local_midi_collection = database["midis"]
+            local_user_collection.delete_one({"_id": user_atlas["_id"]})
+            local_midi_collection.delete_many({"user_id": str(user_atlas["_id"])})
+
+            # Copy user data
+            user_data = user_atlas.copy()
+            local_user_collection = database["users"]
+            local_user_collection.update_one(
+                {"_id": user_atlas["_id"]}, {"$set": user_data}, upsert=True
+            )
+
+            # Fetch and copy MIDI data
+            midis_atlas = database_atlas["midis"].find(
+                {"user_id": str(user_atlas["_id"])}
+            )
+            local_midi_collection = database["midis"]
+
+            for midi in midis_atlas:
+                midi.pop("_id", None)  # Remove '_id' to avoid conflicts
+                local_midi_collection.update_one(
+                    {"midi_url": midi["midi_url"]}, {"$set": midi}, upsert=True
+                )
+
             return redirect(url_for("index"))
 
-        # If the username or password does not match we render the login.html template once more
         errors.append("Invalid username or password!")
         return render_template("login.html", errors=errors)
+
     return None
 
 
@@ -288,7 +347,7 @@ def forgot_password():
         confirm_password = request.form["confirm_password"]
         email = request.form["email"]
         errors = []
-        user = database.users.find_one({"email": email, "username": username})
+        user = database_atlas.users.find_one({"email": email, "username": username})
 
         if not user:
             errors.append("Invalid username or email!")
