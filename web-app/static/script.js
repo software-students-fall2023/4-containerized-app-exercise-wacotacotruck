@@ -4,18 +4,18 @@ let isRecording = false;
 
 function startRecording() {
   navigator.mediaDevices
-      .getUserMedia({ audio: true })
-      .then((stream) => {
-          const options = { mimeType: "audio/webm" };
-          mediaRecorder = new MediaRecorder(stream, options);
-          mediaRecorder.ondataavailable = handleDataAvailable;
-          mediaRecorder.onstop = handleStop;
-          mediaRecorder.start();
-          audioChunks = [];
-      })
-      .catch((error) => {
-          console.error("Error accessing the microphone: ", error);
-      });
+    .getUserMedia({ audio: true })
+    .then((stream) => {
+      const options = { mimeType: "audio/webm" };
+      mediaRecorder = new MediaRecorder(stream, options);
+      mediaRecorder.ondataavailable = handleDataAvailable;
+      mediaRecorder.onstop = handleStop;
+      mediaRecorder.start();
+      audioChunks = [];
+    })
+    .catch((error) => {
+      console.error("Error accessing the microphone: ", error);
+    });
 }
 
 function stopRecording() {
@@ -30,7 +30,6 @@ function handleStop() {
   const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
   sendAudioToServer(audioBlob);
 }
-
 
 function sendAudioToServer(audioBlob) {
   let formData = new FormData();
@@ -55,16 +54,16 @@ function sendAudioToServer(audioBlob) {
       console.error("Error sending audio data to the server: ", error);
     })
     .finally(() => {
-      hideLoader(); 
+      hideLoader();
     });
 }
 
 function showLoader() {
-  document.getElementById('loader').style.display = 'flex';
+  document.getElementById("loader").style.display = "flex";
 }
 
 function hideLoader() {
-  document.getElementById('loader').style.display = 'none';
+  document.getElementById("loader").style.display = "none";
 }
 
 // Function to handle description button
@@ -81,53 +80,51 @@ function toggleDescription() {
 }
 
 function toggleRecording() {
-  const recordButton = document.getElementById('recordButton');
-  const recordIcon = document.getElementById('recordIcon');
+  const recordButton = document.getElementById("recordButton");
+  const recordIcon = document.getElementById("recordIcon");
 
   if (!isRecording) {
-      startRecording();
-      recordButton.title = "Stop Recording";
-      recordIcon.textContent = "stop";
-      recordButton.classList.add('recording');
+    startRecording();
+    recordButton.title = "Stop Recording";
+    recordIcon.textContent = "stop";
+    recordButton.classList.add("recording");
   } else {
-      stopRecording();
-      recordButton.title = "Start Recording";
-      recordIcon.textContent = "fiber_manual_record";
-      recordButton.classList.remove('recording');
+    stopRecording();
+    recordButton.title = "Start Recording";
+    recordIcon.textContent = "fiber_manual_record";
+    recordButton.classList.remove("recording");
   }
 
   isRecording = !isRecording;
 }
 
-
 function playMidi() {
-  const player = document.querySelector('midi-player');
+  const player = document.querySelector("midi-player");
   if (player) {
-      player.start();
+    player.start();
   }
 }
 
 function stopMidi() {
-  const player = document.querySelector('midi-player');
+  const player = document.querySelector("midi-player");
   if (player) {
-      player.stop();
+    player.stop();
   }
 }
 
 function playPostMidi(playerId) {
   const player = document.getElementById(playerId);
   if (player) {
-      player.start();  
+    player.start();
   }
 }
 
 function stopPostMidi(playerId) {
   const player = document.getElementById(playerId);
   if (player) {
-      player.stop();
+    player.stop();
   }
 }
-
 
 function displayMidiLink(midiUrl) {
   // Update MIDI player and visualizer source
@@ -135,9 +132,9 @@ function displayMidiLink(midiUrl) {
     console.error("midi url is undefined");
     return;
   }
-  const midiPlayer = document.querySelector('midi-player');
-  const midiVisualizer = document.getElementById('myVisualizer');
-  
+  const midiPlayer = document.querySelector("midi-player");
+  const midiVisualizer = document.getElementById("myVisualizer");
+
   if (midiPlayer && midiVisualizer) {
     midiPlayer.src = midiUrl;
     midiVisualizer.src = midiUrl;
@@ -158,44 +155,44 @@ function downloadMidi() {
 }
 
 function uploadMidi() {
-  const midiPlayer = document.querySelector('midi-player');
+  const midiPlayer = document.querySelector("midi-player");
   const midiSrc = midiPlayer ? midiPlayer.src : null;
 
   if (!midiSrc) {
-      console.error("No MIDI source to upload");
-      return;
+    console.error("No MIDI source to upload");
+    return;
   }
 
-  const filename = midiSrc.split('/').pop();
+  const filename = midiSrc.split("/").pop();
 
-  fetch('http://localhost:5001/upload-midi', {
-      method: 'POST',
-      headers: {
-          'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ filename: filename })
+  fetch("http://localhost:5001/upload-midi", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ filename: filename }),
   })
-  .then(response => response.json())
-  .then(data => {
+    .then((response) => response.json())
+    .then((data) => {
       if (data.error) {
-          console.error("Error uploading MIDI file:", data.error);
+        console.error("Error uploading MIDI file:", data.error);
       } else {
-          console.log("MIDI file uploaded successfully:", data.message);
+        console.log("MIDI file uploaded successfully:", data.message);
       }
-  })
-  .catch(error => {
+    })
+    .catch((error) => {
       console.error("Error in MIDI file upload:", error);
-  });
+    });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.midi-post').forEach(post => {
-      const midiPlayer = post.querySelector('midi-player');
-      const midiVisualizer = post.querySelector('midi-visualizer');
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".midi-post").forEach((post) => {
+    const midiPlayer = post.querySelector("midi-player");
+    const midiVisualizer = post.querySelector("midi-visualizer");
 
-      if (midiPlayer && midiVisualizer) {
-          midiVisualizer.src = midiPlayer.src;
-      }
+    if (midiPlayer && midiVisualizer) {
+      midiVisualizer.src = midiPlayer.src;
+    }
   });
 });
 

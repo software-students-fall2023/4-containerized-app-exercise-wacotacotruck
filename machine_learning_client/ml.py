@@ -41,6 +41,7 @@ client = MongoClient("db", 27017)
 db = client["database"]
 collection = db["midifiles"]
 
+
 def frequency_to_note_name(frequency):
     """Convert a frequency in Hertz to a musical note name."""
     if frequency <= 0:
@@ -149,14 +150,25 @@ def create_and_store_midi_in_s3(filtrd_comb_notes, onsets, drtns, tempo):
         print("AWS credentials not available")
         raise
 
+
 def store_in_db(user_id, username, midi_url):
     data = {"user_id": user_id, "username": username, "url": midi_url}
     collection.insert_one(data)
+
 
 @app.route("/process", methods=["POST"])
 def process_data():
     """Route to process the data."""
     try:
+        if "audio" not in request.files:
+            return jsonify({"error": "No audio file found in the request"}), 400
+
+        file = request.files["audio"]
+
+        # Check MIME type
+        if file.content_type != "audio/webm":
+            return jsonify({"error": "Unsupported Media Type"}), 415
+
         webm_file = "temp_recording.webm"
         wav_file = "temp_recording.wav"
 
@@ -195,20 +207,20 @@ def process_data():
             filtered_and_combined_notes, onsets, durations, tempo
         )
 
-        logging.info("Received request: %s", request.json)
-        logging.info("Received request data: %s", request.data)
+        # logging.info("Received request: %s", request.json)
+        # logging.info("Received request data: %s", request.data)
 
-        if not request.json:
-            logging.info("No JSON data received.")
-            return jsonify({"error": "Request must be JSON"}), 400
+        # if not request.json:
+        #     logging.info("No JSON data received.")
+        #     return jsonify({"error": "Request must be JSON"}), 400
 
-        user_id = request.json.get("user_id")
-        if not user_id:
-            logging.info("Missing user_id.")
-            return jsonify({"error": "Missing user_id."}), 400
-        
-        username = find_username(user_id)
-        store_in_db(user_id, username, midi_url)
+        # user_id = request.json.get("user_id")
+        # if not user_id:
+        #     logging.info("Missing user_id.")
+        #     return jsonify({"error": "Missing user_id."}), 400
+
+        # username = find_username(user_id)
+        # store_in_db(user_id, username, midi_url)
 
         return jsonify({"midi_url": midi_url})
         # store file in database, grab from there and show.
@@ -220,6 +232,7 @@ def process_data():
         app.logger.error("Value error occurred: %s", val_err)
         return jsonify({"error": str(val_err)}), 500
 
+
 def find_username(user_id):
     user_id_obj = ObjectId("some_user_id")
     user_collection = db["users"]
@@ -230,6 +243,7 @@ def find_username(user_id):
         return username
     else:
         logging.info("User not found.")
+
 
 def smooth_pitch_data(notes_data, window_size=5):
     """smoothing pitch data."""
