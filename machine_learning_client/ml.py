@@ -163,7 +163,8 @@ def store_in_db(user_id, username, midi_url):
 def process_data():
     """Route to process the data."""
     try:
-        validate_and_get_file(request)
+        if "audio" not in request.files:
+            raise ValueError("No audio file found in the request")
         file = request.files["audio"]
 
         # Retrieve user ID from the form data
@@ -227,12 +228,6 @@ def process_data():
     except ValueError as val_err:
         app.logger.error("Value error occurred: %s", val_err)
         return jsonify({"error": str(val_err)}), 500
-
-def validate_and_get_file(request):
-    """Making process data use less locals cuz pylint :)"""
-    if "audio" not in request.files:
-        raise ValueError("No audio file found in the request")
-    return request.files["audio"]
 
 def find_username(user_id):
     """Function to find username by user id."""

@@ -92,9 +92,9 @@ def cleanup():
         for url in orphan_files:
             key = url.split("/")[-1]
             s3.delete_object(Bucket=s3_bucket_name, Key=key)
-            app.logger.info(f"Deleted orphan file: {url}")
+            app.logger.info("Deleted orphan file: {url}")
     except ClientError as e:
-        logging.error(f"ClientError during S3 operation: %s", e)
+        logging.error("ClientError during S3 operation: %s", e)
         return str(e)
 
     return "cleanup completed"
