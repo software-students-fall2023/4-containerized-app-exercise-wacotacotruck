@@ -202,7 +202,7 @@ def process_data():
             logging.info("No JSON data received.")
             return jsonify({"error": "Request must be JSON"}), 400
 
-        user_id = request.json.get("username")
+        user_id = request.json.get("user_id")
         if not user_id:
             logging.info("Missing user_id.")
             return jsonify({"error": "Missing user_id."}), 400

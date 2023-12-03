@@ -116,7 +116,7 @@ def mymidi():
         user_id = session["user_id"]
 
         # Find the MIDI files belonging to the user
-        user_posts = midi_collection.find({"user_id": user_id})
+        user_posts = midi_collection.find({"user_id": user_id}).sort("created_at", -1)
         
         return render_template("mymidi.html", user_posts=list(user_posts))
     
@@ -134,6 +134,11 @@ def call_ml_client(data):
     else:
         logging.info("User not logged in.")
         return "Log in first!"
+
+# def call_ml_client(data):
+#     """Contacts the ml client"""
+#     response = requests.post("http://localhost:5002/process", json=data, timeout=10)
+#     return response.json()
 
 
 # This is the function which registers the signup page from the login.html page
