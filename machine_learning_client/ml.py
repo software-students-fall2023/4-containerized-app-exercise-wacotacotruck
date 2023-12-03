@@ -17,6 +17,7 @@ import boto3
 from botocore.exceptions import NoCredentialsError
 from pymongo import MongoClient
 from bson import ObjectId
+from werkzeug.exceptions import BadRequest
 
 app = Flask(__name__)
 
@@ -155,15 +156,14 @@ def store_in_db(user_id, username, midi_url):
     """Function to save to the database."""
     data = {"user_id": user_id, "username": username, "url": midi_url}
     collection.insert_one(data)
-    logging.info(f"Inserted file by {username}")
+    logging.info("Inserted file by %s", username)
 
 
 @app.route("/process", methods=["POST"])
 def process_data():
     """Route to process the data."""
     try:
-        if "audio" not in request.files:
-            return jsonify({"error": "No audio file found in the request"}), 400
+        validate_and_get_file(audio)
 
         file = request.files["audio"]
 
@@ -171,8 +171,8 @@ def process_data():
         if file:
             try:
                 user_id = request.form.get('user_id')
-            except Exception as e:
-                logging.info(e)
+            except BadRequest as e:
+                logging.info("Bad request error: %s", e)
 
         # Check MIME type
         if file.content_type != "audio/webm":
@@ -204,7 +204,7 @@ def process_data():
         durations = estimate_note_durations(onsets, y, sr=44100)
 
         # Estimate tempo
-        tempo = estimate_tempo(wav_file)
+        # tempo = estimate_tempo(wav_file)
 
         # Clean up temporary files
         clean_up_files(webm_file, wav_file)
@@ -213,12 +213,11 @@ def process_data():
         #     filtered_and_combined_notes, onsets, durations, tempo
         # )
         midi_url = create_and_store_midi_in_s3(
-            filtered_and_combined_notes, onsets, durations, tempo
+            filtered_and_combined_notes, onsets, durations, estimate_tempo(wav_file)
         )
 
         if user_id:
-            username = find_username(user_id)
-            store_in_db(user_id, username, midi_url)
+            store_in_db(user_id, find_username(user_id), midi_url)
 
         return jsonify({"midi_url": midi_url})
         # store file in database, grab from there and show.
@@ -230,6 +229,10 @@ def process_data():
         app.logger.error("Value error occurred: %s", val_err)
         return jsonify({"error": str(val_err)}), 500
 
+def validate_and_get_file(request):
+    if "audio" not in request.files:
+        raise ValueError("No audio file found in the request")
+    return request.files["audio"]
 
 def find_username(user_id):
     """Function to find username by user id."""
@@ -240,8 +243,8 @@ def find_username(user_id):
         username = user_doc.get("username")
         logging.info("Found username.")
         return username
-    else:
-         logging.info("User not found.")
+    logging.info("User not found.")
+    return ""
 
 
 def smooth_pitch_data(notes_data, window_size=5):
