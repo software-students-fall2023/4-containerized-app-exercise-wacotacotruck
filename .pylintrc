@@ -17,3 +17,5 @@ generated-members=
     APP.logger.exception
 [MESSAGES CONTROL]
 disable=duplicate-code
+[DESIGN]
+max-public-methods=30

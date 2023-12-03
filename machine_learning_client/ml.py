@@ -3,6 +3,7 @@ import subprocess
 import os
 import logging
 import uuid
+from datetime import datetime
 import librosa
 from dotenv import load_dotenv
 
@@ -154,9 +155,22 @@ def create_and_store_midi_in_s3(filtrd_comb_notes, onsets, drtns, tempo):
 
 def store_in_db(user_id, username, midi_url):
     """Function to save to the database."""
-    data = {"user_id": user_id, "username": username, "url": midi_url}
+    if not username:
+        logging.error("Username not found for user_id: %s", user_id)
+        return
+
+    # logging.info("MIDI URL added:", {midi_url})
+
+    # Adding a created_at field with the current datetime
+    data = {
+        "user_id": user_id,
+        "username": username,
+        "midi_url": midi_url,
+        "created_at": datetime.utcnow(),  # Store the current UTC time
+    }
+
     collection.insert_one(data)
-    logging.info("Inserted file by %s", username)
+    # logging.info("Inserted file by: %s", username)
 
 
 @app.route("/process", methods=["POST"])
@@ -212,9 +226,16 @@ def process_data():
         # midi_url = generate_midi_url(
         #     filtered_and_combined_notes, onsets, durations, tempo
         # )
+
         midi_url = create_and_store_midi_in_s3(
             process_notes(notes_data), onsets, durations, tempo
         )
+
+        # logging.info("MIDI URL generated:", {midi_url})
+
+        if midi_url is None:
+            app.logger.error("Failed to generate or store MIDI file in S3")
+            return jsonify({"error": "MIDI generation failed"}), 500
 
         if user_id:
             store_in_db(user_id, find_username(user_id), midi_url)
@@ -232,14 +253,19 @@ def process_data():
 
 def find_username(user_id):
     """Function to find username by user id."""
-    user_id_obj = ObjectId(user_id)
+    try:
+        user_id_obj = ObjectId(user_id)
+    except TypeError as e:
+        logging.error("Error converting user_id to ObjectId: %s", e)
+        return ""
+
     user_collection = db["users"]
     user_doc = user_collection.find_one({"_id": user_id_obj})
     if user_doc:
         username = user_doc.get("username")
         logging.info("Found username.")
         return username
-    logging.info("User not found.")
+    logging.error("User not found for user_id: %s", user_id)
     return ""
 
 
