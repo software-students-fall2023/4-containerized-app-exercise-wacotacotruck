@@ -40,7 +40,7 @@ s3 = boto3.client(
 # Connect to MongoDB
 client = MongoClient("db", 27017)
 db = client["database"]
-collection = db["midifiles"]
+collection = db["midis"]
 
 
 def frequency_to_note_name(frequency):

@@ -94,12 +94,12 @@ def cleanup():
             key = url.split("/")[-1]
             s3.delete_object(Bucket=s3_bucket_name, Key=key)
             app.logger.info("Deleted orphan file: {url}")
+
+        return "cleanup completed"
     except ClientError as e:
         logging.error("ClientError during S3 operation: %s", e)
         return str(e)
-
-    return "cleanup completed"
-
+    
 
 @app.route("/upload-midi", methods=["POST"])
 def upload_midi():
