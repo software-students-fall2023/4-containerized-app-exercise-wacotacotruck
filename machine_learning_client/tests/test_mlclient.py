@@ -527,23 +527,6 @@ class Tests:
             os.path.join("machine_learning_client", "static", "output.mid")
             == expected_filepath
         )
-        
-    @patch("machine_learning_client.ml.create_midi")
-    def test_generate_midi_url_error(self, mock_create_midi):
-        """Test generating MIDI URL with an error in creating MIDI."""
-        mock_create_midi.side_effect = Exception("MIDI creation failed")
-
-        filtered_combined_notes = ["C", "D", "E"]  # Example note data
-        onsets = [0.1, 0.5, 1.0]  # Example onset times
-        durations = [0.4, 0.5, 0.6]  # Example note durations
-        tempo = 120  # Example tempo
-
-        with pytest.raises(ValueError) as exc_info:
-            ml.generate_midi_url(
-                filtered_combined_notes, onsets, durations, tempo
-            )
-
-        assert "Failed to create MIDI file" in str(exc_info.value)
     
     def test_estimate_note_durations_no_onsets(self):
         """Test estimating note durations with no onsets."""

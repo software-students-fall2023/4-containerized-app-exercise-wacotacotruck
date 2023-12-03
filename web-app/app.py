@@ -80,7 +80,7 @@ def cleanup():
     """Function to cleanup S3"""
     try:
         midi_urls = set()
-        if "midis" in database.list_collection_names():  
+        if "midis" in database.list_collection_names():
             midi_collection = database["midis"]
             midi_urls = {midi["midi_url"] for midi in midi_collection.find()}
 
@@ -101,7 +101,7 @@ def cleanup():
     except ClientError as e:
         logging.error("ClientError during S3 operation: %s", e)
         return str(e)
-    
+
 
 @app.route("/upload-midi", methods=["POST"])
 def upload_midi():
