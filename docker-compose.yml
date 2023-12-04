@@ -14,8 +14,6 @@ services:
     image: angstisdocker/ml-client:latest
     ports:
       - "5002:5002"
-    volumes:
-      - ./machine_learning_client:/machine_learning_client
   db:
     image: mongo:4.0-xenial
     ports:
