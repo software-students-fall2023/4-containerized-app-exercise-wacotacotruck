@@ -58,7 +58,7 @@ AWS_SECRET_ACCESS_KEY
 S3_BUCKET_NAME
 
 
-.env for machine_learning_client/ folder:
+.env for web_app/ folder:
 
 MONGO_DBNAME
 MONGO_URI
