@@ -26,11 +26,6 @@ class Tests1:
         expected = True
         assert actual == expected, "Expected True to be equal to True!"
 
-    @pytest.fixture
-    def client(app):
-        with app.test_client() as client:
-            yield client
-
     @pytest.fixture(autouse=True)
     def mock_mongo(self):
         """Mocking MongoDB and auto-using for each test."""
