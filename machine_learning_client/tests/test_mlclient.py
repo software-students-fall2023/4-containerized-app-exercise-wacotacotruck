@@ -13,6 +13,7 @@ from .. import ml
 from ..ml import s3, app
 
 # Mocking AWS S3
+S3_BUCKET_NAME = "voice2midi"
 s3 = MagicMock()
 
 
@@ -545,8 +546,6 @@ class TestsClass2:
     def test_create_and_store_midi_in_s3(self, mock_s3):
         """This tests the creation of midi file and storing into s3 bucket"""
 
-        s3_bucket_name = "voice2midi"
-
         # Mock input data for testing
         filtered_notes = [{"note": "C4"}, {"note": "E4"}, {"note": "G4"}]
         onsets = [0.1, 0.3, 0.6]
@@ -574,16 +573,16 @@ class TestsClass2:
             )
 
             # Asserts the upload path is the same.
-            s3.upload_file.assert_called_once_with(
+            mock_s3.upload_file.assert_called_once_with(
                 f"static/output_{test_unique_id}.mid",
-                s3_bucket_name,
+                S3_BUCKET_NAME,
                 f"output_{test_unique_id}.mid",
             )
 
             # Asserts the midi_url is the same.
             assert (
                 midi_url
-                == f"https://{s3_bucket_name}.s3.amazonaws.com/output_{test_unique_id}.mid"
+                == f"https://{S3_BUCKET_NAME}.s3.amazonaws.com/output_{test_unique_id}.mid"
             )
 
             # Check if create_midi includes the right argument for the filepath
