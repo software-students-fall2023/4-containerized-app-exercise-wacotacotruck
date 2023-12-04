@@ -34,7 +34,7 @@ jobs:
         run: |
           cd machine_learning_client/tests
           sudo apt-get install libsndfile1
-          pipenv run python -m pytest
+          pipenv run python -m pytest -s
         env: 
           S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
 
