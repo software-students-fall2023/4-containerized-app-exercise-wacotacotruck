@@ -26,6 +26,8 @@ aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
 aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
 s3_bucket_name = os.getenv("S3_BUCKET_NAME")
 
+host = os.getenv("HOST", "localhost")
+
 s3 = boto3.client(
     "s3",
     aws_access_key_id=aws_access_key_id,
@@ -48,13 +50,13 @@ try:
     client_atlas.admin.command("ping")
     database_atlas = client_atlas[os.getenv("MONGO_DBNAME")]
     print("* Connected to MongoDB!")
-except ConnectionError as err:
-    print('* "Failed to connect to MongoDB at', os.getenv("MONGO_URI"))
-    print("Database connection error:", err)
-
-# except Exception as err:
+# except ConnectionError as err:
 #     print('* "Failed to connect to MongoDB at', os.getenv("MONGO_URI"))
 #     print("Database connection error:", err)
+
+except Exception as err:
+    print('* "Failed to connect to MongoDB at', os.getenv("MONGO_URI"))
+    print("Database connection error:", err)
 
 # Connect to MongoDB
 client = MongoClient("db", 27017)

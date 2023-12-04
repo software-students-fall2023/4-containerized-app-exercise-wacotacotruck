@@ -15,6 +15,7 @@ from ..ml import s3, app
 # Mocking AWS S3
 s3 = MagicMock()
 
+host = os.getenv("HOST", "localhost")
 
 class TestsClass1:
     """Test Class 1 Functions for the Machine Learning Client"""
@@ -319,7 +320,7 @@ class TestsClass1:
         tempo = 120  # Example tempo
 
         # Expected URL
-        expected_url = "http://localhost:5002/static/output.mid"
+        expected_url = "http://{host}:5002/static/output.mid"
 
         # Call the function
         result_url = ml.generate_midi_url(

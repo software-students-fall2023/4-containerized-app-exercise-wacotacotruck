@@ -4,14 +4,14 @@ services:
     build:
       context: ./web_app
       dockerfile: dockerfile.web
-    image: ${DOCKERHUB_USERNAME}/web-app:latest
+    image: angstisdocker/web-app:latest
     ports:
       - "5001:5000"
   ml-client:
     build:
       context: ./machine_learning_client
       dockerfile: dockerfile.ml
-    image: ${DOCKERHUB_USERNAME}/ml-client:latest
+    image: angstisdocker/ml-client:latest
     ports:
       - "5002:5002"
     volumes:
