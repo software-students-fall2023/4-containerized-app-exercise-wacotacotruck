@@ -1,4 +1,4 @@
-name: log github events
+name: Log Github Events
 on:
   push:
     branches: [main, master]
@@ -15,7 +15,7 @@ jobs:
       EVENT_TYPE: ${{ github.event_name }}
       EVENT_ACTION: ${{ github.event.action }}
       EVENT_USERNAME: ${{ github.actor }}
-      EVENT_EMAIL: "${{ github.event.pull_request.sender.email }}"
+      EVENT_EMAIL: "${{ github.event.pull_request.user.login }}@users.noreply.github.com"
       PR_MERGED: ${{ github.event.pull_request.merged }}
       PR_CREATED_AT: ${{ github.event.pull_request.created_at}}
       PR_CLOSED_AT: ${{ github.event.pull_request.closed_at}}

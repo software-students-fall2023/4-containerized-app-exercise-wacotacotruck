@@ -1,0 +1,54 @@
+name: Web App Testing
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    strategy:
+      matrix:
+        python-version: ["3.10"]
+        
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --user pipenv
+          pipenv --python ${{ matrix.python-version }}
+          cd web_app
+          pipenv install --dev
+          pipenv lock 
+          pipenv install -r requirements.txt
+
+      - name: Turn on 'editable' mode
+        run: |
+            pipenv install -e .
+
+      - name: Testing with pytest
+        run: |
+          cd web_app/tests
+          pipenv run python -m pytest
+        env: 
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          MONGO_DBNAME: ${{ secrets.MONGO_DBNAME }}
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+
+      - name: Coverage Report
+        run: |
+          cd web_app/tests
+          pipenv run python -m coverage run -m pytest
+          pipenv run python -m coverage report --include=*.py --fail-under=80
+        env: 
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          MONGO_DBNAME: ${{ secrets.MONGO_DBNAME }}
+          MONGO_URI: ${{ secrets.MONGO_URI }}
