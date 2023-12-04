@@ -547,5 +547,6 @@ class Tests:
 
         expected_envelope = np.zeros(4)  # Expected envelope with all zero values
 
-        assert np.array_equal(envelope, expected_envelope), "Envelopes should be all zero."
-        
+        assert np.array_equal(
+            envelope, expected_envelope
+        ), "Envelopes should be all zero."
