@@ -34,9 +34,17 @@ jobs:
         run: |
           cd machine_learning_client/tests
           sudo apt-get install libsndfile1
-          pipenv run python -m pytest
+          pipenv run python -m pytest -s
+        env: 
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
 
       - name: Coverage Report
         run: |
           pipenv run python -m coverage run -m pytest
-          pipenv run python -m coverage report --include=machine_learning_client/*.py --fail-under=80
+          pipenv run python -m coverage report --include=*.py --fail-under=80
+        env: 
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

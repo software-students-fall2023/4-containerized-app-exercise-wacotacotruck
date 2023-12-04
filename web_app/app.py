@@ -1,30 +1,36 @@
 """Web-app."""
 import os
+
+import logging
+from datetime import datetime
 from flask import Flask, url_for, redirect, render_template, session, request, jsonify
 import requests
 from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 
-# import boto3
+import boto3
 from bson import ObjectId
 from flask_session import Session
 
+from botocore.exceptions import ClientError
 
 # Initializes Flask application and loads the .env file from the MongoDB Atlas Database
 app = Flask(__name__)
 load_dotenv()
 
+logging.basicConfig(level=logging.INFO)
+
 # Initialize S3 client - commented out for now due to pylint
-# aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
-# aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
+aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
 s3_bucket_name = os.getenv("S3_BUCKET_NAME")
 
-# s3 = boto3.client(
-#     's3',
-#     aws_access_key_id=aws_access_key_id,
-#     aws_secret_access_key=aws_secret_access_key
-# )
+s3 = boto3.client(
+    "s3",
+    aws_access_key_id=aws_access_key_id,
+    aws_secret_access_key=aws_secret_access_key,
+)
 
 # Monitors Flask's session management: Uses a secret key to sign and encrypt session data
 # Secret key is essential for the proper functioning of user sessions in your Flask application.
@@ -35,12 +41,12 @@ app.config["SESSION_TYPE"] = "filesystem"
 sess.init_app(app)
 
 # Establish a database connection with the MONGO_URI (MongoDB Atlas connection)
-client = MongoClient(os.getenv("MONGO_URI"))
+client_atlas = MongoClient(os.getenv("MONGO_URI"))
 
 # Checks if the connection has been made, else make an error printout
 try:
-    client.admin.command("ping")
-    database = client[os.getenv("MONGO_DBNAME")]
+    client_atlas.admin.command("ping")
+    database_atlas = client_atlas[os.getenv("MONGO_DBNAME")]
     print("* Connected to MongoDB!")
 except ConnectionError as err:
     print('* "Failed to connect to MongoDB at', os.getenv("MONGO_URI"))
@@ -50,20 +56,54 @@ except ConnectionError as err:
 #     print('* "Failed to connect to MongoDB at', os.getenv("MONGO_URI"))
 #     print("Database connection error:", err)
 
+# Connect to MongoDB
+client = MongoClient("db", 27017)
+database = client["database"]
+
 
 # Routes
 @app.route("/")
 def index():
     """Renders the home page"""
+    if "user_id" in session:
+        user_id = session.get("user_id")
+        return render_template("index.html", user_id=user_id)
     return render_template("index.html")
 
 
 @app.route("/browse")
 def browse():
     """Renders the browse page"""
-    midi_collection = database["midis"]
+    midi_collection = database_atlas["midis"]
     midi_posts = midi_collection.find({})
     return render_template("browse.html", midi_posts=list(midi_posts))
+
+
+def cleanup():
+    """Function to cleanup S3"""
+    try:
+        midi_urls = set()
+        if "midis" in database.list_collection_names():
+            midi_collection = database["midis"]
+            midi_urls = {midi["midi_url"] for midi in midi_collection.find()}
+
+        s3_files = s3.list_objects_v2(Bucket=s3_bucket_name).get("Contents", [])
+        s3_urls = {
+            f"https://{s3_bucket_name}.s3.amazonaws.com/{file['Key']}"
+            for file in s3_files
+        }
+
+        orphan_files = s3_urls - midi_urls
+
+        for url in orphan_files:
+            key = url.split("/")[-1]
+            s3.delete_object(Bucket=s3_bucket_name, Key=key)
+            # app.logger.info(f"Deleted orphan file: {url}")
+
+        return "cleanup completed"
+    except ClientError as e:
+        logging.error("ClientError during S3 operation: %s", e)
+        return str(e)
 
 
 @app.route("/upload-midi", methods=["POST"])
@@ -86,7 +126,7 @@ def upload_midi():
     except TypeError:
         return jsonify({"error": "Invalid User ID"}), 400
 
-    user = database.users.find_one({"_id": user_id_obj})
+    user = database_atlas.users.find_one({"_id": user_id_obj})
 
     if not user:
         return jsonify({"error": "User not found"}), 404
@@ -95,17 +135,52 @@ def upload_midi():
     s3_url = f"https://{s3_bucket_name}.s3.amazonaws.com/{filename}"
 
     # Save the S3 URL with user details
-    midi_collection = database["midis"]
-    midi_data = {"user_id": user_id, "username": user["username"], "midi_url": s3_url}
+    midi_collection = database_atlas["midis"]
+    midi_data = {
+        "user_id": user_id,
+        "username": user["username"],
+        "midi_url": s3_url,
+        "created_at": datetime.utcnow(),
+    }
     midi_collection.insert_one(midi_data)
 
     return jsonify({"message": "MIDI URL uploaded successfully"}), 200
 
 
+# Allowing users to see their own midis here
+@app.route("/mymidi", methods=["GET", "POST"])
+def mymidi():
+    """Renders the mymidi page"""
+    if "user_id" in session:
+        midi_collection = database["midis"]
+
+        # Retreive user_id from session
+        user_id = session["user_id"]
+
+        # Find the MIDI files belonging to the user
+        user_posts = midi_collection.find({"user_id": user_id}).sort("created_at", -1)
+        # user_id_obj = ObjectId(user_id)
+        # user_posts = midi_collection.find({"user_id": user_id_obj}).sort("created_at", -1)
+        return render_template("mymidi.html", user_posts=list(user_posts))
+    return render_template("login.html")
+
+
 def call_ml_client(data):
     """Contacts the ml client"""
-    response = requests.post("http://localhost:5002/process", json=data, timeout=10)
-    return response.json()
+    if "user_id" in session:
+        data["user_id"] = session.get("user_id")
+        # logging.info("Sending data to ML Client:", data)
+        response = requests.post("http://localhost:5002/process", json=data, timeout=10)
+        return response.json()
+    # else:
+    #     logging.info("User not logged in.")
+    return "Log in first!"
+
+
+# def call_ml_client(data):
+#     """Contacts the ml client"""
+#     response = requests.post("http://localhost:5002/process", json=data, timeout=10)
+#     return response.json()
 
 
 # This is the function which registers the signup page from the login.html page
@@ -157,8 +232,8 @@ def signup():
         password_hash = generate_password_hash(password)
 
         # Here we insert their account details to the database
-        collection = database["users"]
-        collection.insert_one(
+        user_collection = database_atlas["users"]
+        user_collection.insert_one(
             {
                 "username": username,
                 "password": password_hash,
@@ -184,33 +259,83 @@ def login():
 
 
 # This function is the backend of the login functionality from the login.html file
+# @app.route("/login_auth", methods=["POST"])
+# def login_auth():
+#     """Route for login authentication"""
+#     # If a user is already logged in, redirect them to the home page
+#     if "user_id" in session:
+#         return redirect(url_for("index"))
+
+#     # Else, ask them to login by inputting a username and password
+#     if request.method == "POST":
+#         username = request.form["username"]
+#         password = request.form["password"]
+#         session["username"] = username
+
+#         errors = []
+
+#         # Once inputted their username and password, check the database for existing users
+#         user = database_atlas.users.find_one({"username": username})
+
+#         # We provide the _id attribute of the user to the user_id in the session
+#         if user and check_password_hash(user["password"], password):
+#             # User sessions to keep track of who's logged in
+#             session["user_id"] = str(user["_id"])
+#             return redirect(url_for("index"))
+
+#         # If the username or password does not match we render the login.html template once more
+#         errors.append("Invalid username or password!")
+#         return render_template("login.html", errors=errors)
+#     return None
+
+
 @app.route("/login_auth", methods=["POST"])
 def login_auth():
     """Route for login authentication"""
-    # If a user is already logged in, redirect them to the home page
     if "user_id" in session:
         return redirect(url_for("index"))
 
-    # Else, ask them to login by inputting a username and password
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
-        session["username"] = username
-
         errors = []
 
-        # Once inputted their username and password, check the database for existing users
-        user = database.users.find_one({"username": username})
+        # cleanup()
+        user_atlas = database_atlas.users.find_one({"username": username})
 
-        # We provide the _id attribute of the user to the user_id in the session
-        if user and check_password_hash(user["password"], password):
-            # User sessions to keep track of who's logged in
-            session["user_id"] = str(user["_id"])
+        if user_atlas and check_password_hash(user_atlas["password"], password):
+            session["user_id"] = str(user_atlas["_id"])
+
+            # clean db before copying from atlas db
+            local_user_collection = database["users"]
+            local_midi_collection = database["midis"]
+            local_user_collection.delete_one({"_id": user_atlas["_id"]})
+            local_midi_collection.delete_many({"user_id": str(user_atlas["_id"])})
+
+            # Copy user data
+            user_data = user_atlas.copy()
+            local_user_collection = database["users"]
+            local_user_collection.update_one(
+                {"_id": user_atlas["_id"]}, {"$set": user_data}, upsert=True
+            )
+
+            # Fetch and copy MIDI data
+            midis_atlas = database_atlas["midis"].find(
+                {"user_id": str(user_atlas["_id"])}
+            )
+            local_midi_collection = database["midis"]
+
+            for midi in midis_atlas:
+                midi.pop("_id", None)  # Remove '_id' to avoid conflicts
+                local_midi_collection.update_one(
+                    {"midi_url": midi["midi_url"]}, {"$set": midi}, upsert=True
+                )
+
             return redirect(url_for("index"))
 
-        # If the username or password does not match we render the login.html template once more
         errors.append("Invalid username or password!")
         return render_template("login.html", errors=errors)
+
     return None
 
 
@@ -223,7 +348,7 @@ def forgot_password():
         confirm_password = request.form["confirm_password"]
         email = request.form["email"]
         errors = []
-        user = database.users.find_one({"email": email, "username": username})
+        user = database_atlas.users.find_one({"email": email, "username": username})
 
         if not user:
             errors.append("Invalid username or email!")
