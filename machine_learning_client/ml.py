@@ -371,8 +371,8 @@ def estimate_note_durations(onsets, y, sr=44100, threshold=0.025):
                 end_sample = j
                 break
 
-        last_duration = max((end_sample - last_onset_sample) / sr, min_duration)
-        durations.append(last_duration)
+        duration = max((end_sample - last_onset_sample) / sr, min_duration)
+        durations.append(duration)
 
     logging.info("durations: %s", durations)
     return durations
