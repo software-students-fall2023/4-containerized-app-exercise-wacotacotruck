@@ -1,7 +1,7 @@
 ![Workflow Status](https://github.com/software-students-fall2023/4-containerized-app-exercise-wacotacotruck/actions/workflows/lint.yml/badge.svg?branch=main&kill_cache=1)
 ![Workflow Status](https://github.com/software-students-fall2023/4-containerized-app-exercise-wacotacotruck/actions/workflows/frontend.yml/badge.svg?branch=main&kill_cache=1)
 ![Workflow Status](https://github.com/software-students-fall2023/4-containerized-app-exercise-wacotacotruck/actions/workflows/backend.yml/badge.svg?branch=main&kill_cache=1)
-![Workflow Status](https://github.com/software-students-fall2023/4-containerized-app-exercise-wacotacotruck/actions/workflows/ci-cd.yml/badge.svg?branch=main&kill_cache=1)
+![Workflow Status](https://github.com/software-students-fall2023/4-containerized-app-exercise-wacotacotruck/actions/workflows/ci.yml/badge.svg?branch=main&kill_cache=1)
 
 
 # Sing & Sync
@@ -38,7 +38,7 @@ Before you start the steps below, make sure you have the following downloaded on
  Default region name: us-east-1
  Default output format: json
  ```
- 
+
 ### Running the Application:
 
 1. Clone the repository:
