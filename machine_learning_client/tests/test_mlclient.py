@@ -1,9 +1,12 @@
 """Module for Testing Python Functions"""
 import random
 import os
+from datetime import datetime
 from unittest.mock import MagicMock, patch
 import subprocess
 import re
+# import logging
+# from bson import ObjectId
 import pytest
 import numpy as np
 import pretty_midi
@@ -11,7 +14,6 @@ from .. import ml
 from ..ml import s3
 
 # Mocking AWS S3
-S3_BUCKET_NAME = "voice2midi"
 s3 = MagicMock()
 
 
@@ -620,3 +622,76 @@ class TestsClass2:
                 mock_s3.upload_file.call_args[0][0]
                 == f"static/output_{test_unique_id}.mid"
             )
+
+    def test_store_in_db(self, caplog):
+        """This tests whether a user is added to an instance of the MongoDB collection"""
+
+        user_id = "123"
+        username = "test_user"
+        midi_url = "http://example.com/midi"
+
+        # Mocking the datetime.utcnow() to a fixed value for testing
+        fixed_datetime = datetime(2023, 1, 1, 0, 0, 0)
+        with patch("machine_learning_client.ml.datetime") as mock_datetime, patch(
+            "machine_learning_client.ml.collection"
+        ) as mock_collection:
+            mock_datetime.utcnow.return_value = fixed_datetime
+
+            # Calling the function to test
+            ml.store_in_db(user_id, username, midi_url)
+
+        # Assertion to check if the inserted user is the same as the test values
+        mock_collection.insert_one.assert_called_once_with(
+            {
+                "user_id": user_id,
+                "username": username,
+                "midi_url": midi_url,
+                "created_at": fixed_datetime,
+            }
+        )
+
+        # Assertion to check if a username is not in the database
+        mock_collection.reset_mock()
+        ml.store_in_db(user_id, "", midi_url)
+        assert "Username not found" in caplog.text
+
+
+    def test_find_username_success(self):
+        """Test finding username with a valid user id."""
+
+        user_id = "some_valid_user_id"
+        expected_username = "test_user"
+
+        # Mocking the user document in the database
+        mock_user_doc = {"_id": "some_object_id", "username": expected_username}
+
+        with patch("machine_learning_client.ml.ObjectId") as mock_object_id, \
+             patch("machine_learning_client.ml.db") as mock_db:
+            mock_object_id.return_value = "some_object_id"
+            mock_db["users"].find_one.return_value = mock_user_doc
+
+            # Calling the function to test
+            result = ml.find_username(user_id)
+
+            # Assertions
+            assert result == expected_username
+            mock_db["users"].find_one.assert_called_once_with({"_id": "some_object_id"})
+
+
+    def test_find_username_user_not_found(self, caplog):
+        """Test finding username when the user is not found in the database."""
+
+        user_id = "non_existent_user_id"
+
+        # Mocking the case where user is not found in the database
+        with patch("machine_learning_client.ml.ObjectId") as mock_object_id, \
+             patch("machine_learning_client.ml.db") as mock_db:
+            mock_object_id.return_value = "some_object_id"
+            mock_db["users"].find_one.return_value = None
+
+            # Calling the function to test
+            result = ml.find_username(user_id)
+
+            # Assertions
+            assert result == ""
+            assert "User not found for user_id" in caplog.text
