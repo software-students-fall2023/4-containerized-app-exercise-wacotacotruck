@@ -2,14 +2,16 @@ version: "3"
 services:
   web-app:
     build:
-      context: ./web_app
-      dockerfile: dockerfile.web
+      context: ./web-app
+      dockerfile: Dockerfile.web
+    image: ${DOCKERHUB_USERNAME}/web-app:latest
     ports:
       - "5001:5000"
   ml-client:
     build:
       context: ./machine_learning_client
-      dockerfile: dockerfile.ml
+      dockerfile: Dockerfile.ml
+    image: ${DOCKERHUB_USERNAME}/ml-client:latest
     ports:
       - "5002:5002"
     volumes:
