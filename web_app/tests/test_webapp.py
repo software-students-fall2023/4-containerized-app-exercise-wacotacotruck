@@ -19,22 +19,20 @@ class Tests1:
         assert actual == expected, "Expected True to be equal to True!"
 
     @pytest.fixture
-    def app(self):
-        app.config.update({
-            "TESTING": True,
-        })
-
+    def mock(self):
         # Mock database
         with mongomock.patch(servers=(('server.example.com', 27017),)):
             yield app
 
     @pytest.fixture
-    def client(self, app):
-        return app.test_client()
+    def client(self, mock):
+        """Create a test client for the Flask application."""
+        return mock.test_client()
     
     @pytest.fixture
-    def runner(self, app):
-        return app.test_cli_runner()
+    def runner(self, mock):
+        """Create a test command-line runner for the Flask application."""
+        return mock.test_cli_runner()
     
     def test_signup_page(self, client):
         """Test that the signup page renders correctly"""
@@ -53,7 +51,7 @@ class Tests1:
         }
         response = client.post('/signup', data=new_user)
         assert response.status_code == 200  
-        assert b'Username already exists!' in response.data  
+        assert b'Username already exists!' in response.data
 
     def test_signup_successful(self, client):
         """Test successful signup"""
@@ -64,7 +62,7 @@ class Tests1:
             'email': 'new_user@email.com'
         }
         response = client.post('/signup', data=new_user)
-        assert response.status_code == 302  
+        assert response.status_code == 302
         assert b'/login' in response.headers['Location']
 
     def test_signup_password_too_short(self, client):
@@ -115,7 +113,7 @@ class Tests1:
         response = client.post('/signup', data=data)
         assert response.status_code == 200
         assert b'Password should have at least one alphabet!' in response.data
-    
+
     def test_login_page_not_logged_in(self, client):
         """Test that the login page is rendered when not logged in"""
         response = client.get('/login')

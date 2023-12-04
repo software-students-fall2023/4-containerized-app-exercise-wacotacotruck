@@ -74,7 +74,7 @@ def index():
 def browse():
     """Renders the browse page"""
     midi_collection = database_atlas["midis"]
-    midi_posts = midi_collection.find({})
+    midi_posts = midi_collection.find({}).sort("created_at", -1)
     return render_template("browse.html", midi_posts=list(midi_posts))
 
 
