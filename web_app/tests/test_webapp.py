@@ -3,12 +3,13 @@ from unittest.mock import patch
 from flask import Flask 
 import pytest
 import mongomock
-from .. import app as ap
-# from web_app.app import create_app
+from .. import app
+from web_app.app import create_app
 
 @pytest.fixture
 def app():
-    return ap
+    app = create_app()
+    return app
 
 class Tests1:
     """Test Functions for the Web App"""
@@ -31,14 +32,14 @@ class Tests1:
         with mongomock.patch(servers=(('server.example.com', 27017),)):
             yield
 
-    def test_signup_page(self, client):
+    def test_signup_page(self):
         """Test that the signup page renders correctly"""
-        response = client.get("/signup")
+        response = app.get("/signup")
         assert response.status_code == 200
         assert b"Sign Up" in response.data
 
     @patch("web_app.app.database.users.find_one")
-    def test_signup_with_existing_username(self, mock_find_one, client):
+    def test_signup_with_existing_username(self, mock_find_one):
         """Test signup with an existing username"""
 
         mock_find_one.return_value = {"username": "existing_user"}
@@ -49,7 +50,7 @@ class Tests1:
             "confirm_password": "Password123",
             "email": "exis_user@email.com",
         }
-        response = client.post("/signup", data=new_user)
+        response = app.post("/signup", data=new_user)
 
         assert response.status_code == 200
         assert b"Username already exists!" in response.data
@@ -57,7 +58,7 @@ class Tests1:
 
     # @patch("web_app.app.database.users.find_one")
     # @patch("web_app.app.database.users.insert_one")
-    def test_signup_new_username(self, client):
+    def test_signup_new_username(self):
         """Test successful signup"""
         new_user = {
             "username": "newuser",
@@ -65,11 +66,11 @@ class Tests1:
             "confirm_password": "Password123",
             "email": "new_user@email.com",
         }
-        response = client.post("/signup", data=new_user)
+        response = app.post("/signup", data=new_user)
         assert response.status_code == 302
         assert b"/login" in response.headers["Location"]
 
-    def test_signup_password_too_short(self, client):
+    def test_signup_password_too_short(self):
         """Test signup with a password that is too short"""
         data = {
             "username": "user",
@@ -77,11 +78,11 @@ class Tests1:
             "confirm_password": "Zx25",
             "email": "user@email.com",
         }
-        response = client.post("/signup", data=data)
+        response = app.post("/signup", data=data)
         assert response.status_code == 200
         assert b"Password must be between 8 and 20 characters long!" in response.data
 
-    def test_signup_password_too_long(self, client):
+    def test_signup_password_too_long(self):
         """Test signup with a password that is too long"""
         data = {
             "username": "user",
@@ -89,11 +90,11 @@ class Tests1:
             "confirm_password": "PasswordPass12345678912345",
             "email": "user@email.com",
         }
-        response = client.post("/signup", data=data)
+        response = app.post("/signup", data=data)
         assert response.status_code == 200
         assert b"Password must be between 8 and 20 characters long!" in response.data
 
-    def test_signup_password_no_digit(self, client):
+    def test_signup_password_no_digit(self):
         """Test signup with a password that has no digits"""
         data = {
             "username": "user",
@@ -101,11 +102,11 @@ class Tests1:
             "confirm_password": "PassyPass",
             "email": "user@email.com",
         }
-        response = client.post("/signup", data=data)
+        response = app.post("/signup", data=data)
         assert response.status_code == 200
         assert b"Password should have at least one number!" in response.data
 
-    def test_signup_password_no_alphabet(self, client):
+    def test_signup_password_no_alphabet(self):
         """Test signup with a password that has no alphabets"""
         data = {
             "username": "user",
@@ -113,7 +114,7 @@ class Tests1:
             "confirm_password": "12345678",
             "email": "user@email.com",
         }
-        response = client.post("/signup", data=data)
+        response = app.post("/signup", data=data)
         assert response.status_code == 200
         assert b"Password should have at least one alphabet!" in response.data
 
