@@ -11,9 +11,8 @@ from dotenv import load_dotenv
 
 import boto3
 from bson import ObjectId
-from flask_session import Session
-
 from botocore.exceptions import ClientError
+from flask_session import Session
 
 # Initializes Flask application and loads the .env file from the MongoDB Atlas Database
 app = Flask(__name__)
