@@ -21,7 +21,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install --user pipenv
           pipenv --python ${{ matrix.python-version }}
-          cd web-app
+          cd web_app
           pipenv install --dev
           pipenv lock 
           pipenv install -r requirements.txt
@@ -32,5 +32,10 @@ jobs:
 
       - name: Testing with pytest
         run: |
-          cd web-app/tests
+          cd web_app/tests
           pipenv run python -m pytest
+
+      - name: Coverage Report
+        run: |
+          pipenv run python -m coverage run -m pytest
+          pipenv run python -m coverage report --include=web_app/*.py --fail-under=80

@@ -2,7 +2,7 @@ version: "3"
 services:
   web-app:
     build:
-      context: ./web-app
+      context: ./web_app
       dockerfile: dockerfile.web
     ports:
       - "5001:5000"
