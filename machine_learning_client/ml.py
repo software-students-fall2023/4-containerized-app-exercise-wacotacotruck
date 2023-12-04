@@ -3,6 +3,7 @@ import subprocess
 import os
 import logging
 import uuid
+from datetime import datetime
 import librosa
 from dotenv import load_dotenv
 
@@ -15,7 +16,9 @@ import soundfile as sf
 import numpy as np
 import boto3
 from botocore.exceptions import NoCredentialsError
-
+from pymongo import MongoClient
+from bson import ObjectId
+from werkzeug.exceptions import BadRequest
 
 app = Flask(__name__)
 
@@ -34,6 +37,11 @@ s3 = boto3.client(
     aws_access_key_id=aws_access_key_id,
     aws_secret_access_key=aws_secret_access_key,
 )
+
+# Connect to MongoDB
+client = MongoClient("db", 27017)
+db = client["database"]
+collection = db["midis"]
 
 
 def frequency_to_note_name(frequency):
@@ -145,10 +153,45 @@ def create_and_store_midi_in_s3(filtrd_comb_notes, onsets, drtns, tempo):
         raise
 
 
+def store_in_db(user_id, username, midi_url):
+    """Function to save to the database."""
+    if not username:
+        logging.error("Username not found for user_id: %s", user_id)
+        return
+
+    # logging.info("MIDI URL added:", {midi_url})
+
+    # Adding a created_at field with the current datetime
+    data = {
+        "user_id": user_id,
+        "username": username,
+        "midi_url": midi_url,
+        "created_at": datetime.utcnow(),  # Store the current UTC time
+    }
+
+    collection.insert_one(data)
+    # logging.info("Inserted file by: %s", username)
+
+
 @app.route("/process", methods=["POST"])
 def process_data():
     """Route to process the data."""
     try:
+        if "audio" not in request.files:
+            raise ValueError("No audio file found in the request")
+        file = request.files["audio"]
+
+        # Retrieve user ID from the form data
+        if file:
+            try:
+                user_id = request.form.get("user_id")
+            except BadRequest as e:
+                logging.info("Bad request error: %s", e)
+
+        # Check MIME type
+        if file.content_type != "audio/webm":
+            return jsonify({"error": "Unsupported Media Type"}), 415
+
         webm_file = "temp_recording.webm"
         wav_file = "temp_recording.wav"
 
@@ -163,7 +206,7 @@ def process_data():
         logging.info("Chunked notes data for jsonify: %s", notes_data_sorted)
 
         # Further processing on notes data
-        filtered_and_combined_notes = process_notes(notes_data)
+        # filtered_and_combined_notes = process_notes(notes_data)
 
         # Load the audio file first to get y and sr
         y, sr = librosa.load(wav_file, sr=44100)
@@ -183,18 +226,47 @@ def process_data():
         # midi_url = generate_midi_url(
         #     filtered_and_combined_notes, onsets, durations, tempo
         # )
+
         midi_url = create_and_store_midi_in_s3(
-            filtered_and_combined_notes, onsets, durations, tempo
+            process_notes(notes_data), onsets, durations, tempo
         )
+
+        # logging.info("MIDI URL generated:", {midi_url})
+
+        if midi_url is None:
+            app.logger.error("Failed to generate or store MIDI file in S3")
+            return jsonify({"error": "MIDI generation failed"}), 500
+
+        if user_id:
+            store_in_db(user_id, find_username(user_id), midi_url)
+
         return jsonify({"midi_url": midi_url})
         # store file in database, grab from there and show.
 
-    except IOError as io_err:
-        app.logger.error("IO error occurred: %s", io_err)
-        return jsonify({"error": str(io_err)}), 500
-    except ValueError as val_err:
-        app.logger.error("Value error occurred: %s", val_err)
-        return jsonify({"error": str(val_err)}), 500
+    except IOError as e:
+        app.logger.error("IO error occurred: %s", e)
+        return jsonify({"error": str(e)}), 500
+    except ValueError as e:
+        app.logger.error("Value error occurred: %s", e)
+        return jsonify({"error": str(e)}), 500
+
+
+def find_username(user_id):
+    """Function to find username by user id."""
+    try:
+        user_id_obj = ObjectId(user_id)
+    except TypeError as e:
+        logging.error("Error converting user_id to ObjectId: %s", e)
+        return ""
+
+    user_collection = db["users"]
+    user_doc = user_collection.find_one({"_id": user_id_obj})
+    if user_doc:
+        username = user_doc.get("username")
+        logging.info("Found username.")
+        return username
+    logging.error("User not found for user_id: %s", user_id)
+    return ""
 
 
 def smooth_pitch_data(notes_data, window_size=5):
@@ -271,6 +343,7 @@ def estimate_note_durations(onsets, y, sr=44100, threshold=0.025):
     Estimate note durations using onsets and amplitude envelope.
     """
     amp_env = calculate_amplitude_envelope(y, sr)
+    min_duration = 0.05
     durations = []
 
     # Iterate over onsets using enumerate
@@ -278,7 +351,6 @@ def estimate_note_durations(onsets, y, sr=44100, threshold=0.025):
         onset_sample = int(onset * sr)
         next_onset_sample = int(onsets[i + 1] * sr)
 
-        # Rest of your logic remains the same
         end_sample = next_onset_sample
         for j in range(onset_sample, next_onset_sample, 512):
             # 512 is the hop length used in envelope calculation
@@ -286,7 +358,8 @@ def estimate_note_durations(onsets, y, sr=44100, threshold=0.025):
                 end_sample = j
                 break
 
-        duration = (end_sample - onset_sample) / sr
+        # Calculate duration with a minimum duration constraint
+        duration = max((end_sample - onset_sample) / sr, min_duration)
         durations.append(duration)
 
     # Handle the last onset separately
@@ -298,8 +371,8 @@ def estimate_note_durations(onsets, y, sr=44100, threshold=0.025):
                 end_sample = j
                 break
 
-        last_duration = (end_sample - last_onset_sample) / sr
-        durations.append(last_duration)
+        duration = max((end_sample - last_onset_sample) / sr, min_duration)
+        durations.append(duration)
 
     logging.info("durations: %s", durations)
     return durations
