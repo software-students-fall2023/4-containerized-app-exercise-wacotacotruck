@@ -39,6 +39,8 @@ jobs:
           S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          MONGO_DBNAME: ${{ Voice-to-Midi }}
+          MONGO_URI: ${{ mongodb+srv://midi_admin:pass1234@atlascluster.dv0ypra.mongodb.net/?retryWrites=true&w=majority }}
 
       - name: Coverage Report
         run: |
@@ -48,3 +50,5 @@ jobs:
           S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          MONGO_DBNAME: ${{ Voice-to-Midi }}
+          MONGO_URI: ${{ mongodb+srv://midi_admin:pass1234@atlascluster.dv0ypra.mongodb.net/?retryWrites=true&w=majority }}

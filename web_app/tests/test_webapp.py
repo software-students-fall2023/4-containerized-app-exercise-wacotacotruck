@@ -1,5 +1,5 @@
 """Module for Testing Python Functions"""
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 import pytest
 import mongomock
 from .. import app
@@ -26,7 +26,8 @@ class Tests1:
         return app.test_client()
     
     @pytest.fixture(autouse=True)
-    def mock_mongo(monkeypatch):
+    def mock_mongo(self, monkeypatch):
+        """Mocking MongoDB and auto-using for each test."""
         with mongomock.patch(servers=(('server.example.com', 27017),)):
             yield
 
