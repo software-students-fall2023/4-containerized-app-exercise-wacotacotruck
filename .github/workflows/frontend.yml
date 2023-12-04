@@ -21,7 +21,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install --user pipenv
           pipenv --python ${{ matrix.python-version }}
-          cd web-app
+          cd web_app
           pipenv install --dev
           pipenv lock 
           pipenv install -r requirements.txt
@@ -32,5 +32,23 @@ jobs:
 
       - name: Testing with pytest
         run: |
-          cd web-app/tests
+          cd web_app/tests
           pipenv run python -m pytest
+        env: 
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          MONGO_DBNAME: ${{ secrets.MONGO_DBNAME }}
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+
+      - name: Coverage Report
+        run: |
+          cd web_app/tests
+          pipenv run python -m coverage run -m pytest
+          pipenv run python -m coverage report --include=*.py --fail-under=80
+        env: 
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          MONGO_DBNAME: ${{ secrets.MONGO_DBNAME }}
+          MONGO_URI: ${{ secrets.MONGO_URI }}

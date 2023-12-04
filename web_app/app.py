@@ -8,11 +8,11 @@ import requests
 from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
-from flask_session import Session
 
 import boto3
 from bson import ObjectId
 from botocore.exceptions import ClientError
+from flask_session import Session
 
 # Initializes Flask application and loads the .env file from the MongoDB Atlas Database
 app = Flask(__name__)
