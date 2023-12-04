@@ -5,4 +5,5 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install git+https://github.com/librosa/librosa
 COPY . .
+EXPOSE 5002
 CMD ["python", "ml.py"]
