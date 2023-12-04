@@ -572,8 +572,6 @@ class TestsClass2:
                 output_file=f"output_{test_unique_id}.mid",
             )
 
-            print(S3_BUCKET_NAME)
-
             # Asserts the upload path is the same.
             mock_s3.upload_file.assert_called_once_with(
                 f"static/output_{test_unique_id}.mid",
