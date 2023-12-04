@@ -1,21 +1,23 @@
 """Module for Testing Python Functions"""
+# import json
+# import tempfile
 import random
 import os
 from unittest.mock import MagicMock, patch
 import subprocess
+import re
 import pytest
 import numpy as np
 import pretty_midi
-from machine_learning_client import ml
+from .. import ml
+from ..ml import s3, app
+
+# Mocking AWS S3
+s3 = MagicMock()
 
 
-class Tests:
-    """Test Functions for the Machine Learning Client"""
-
-    @pytest.fixture
-    def example_fixture(self):
-        """An example of a pytest fixture"""
-        yield
+class TestsClass1:
+    """Test Class 1 Functions for the Machine Learning Client"""
 
     @pytest.fixture
     def mocker(self):
@@ -421,7 +423,7 @@ class Tests:
         test_dir = os.path.dirname(__file__)
         sample_audio_file = os.path.join(test_dir, "test_audio.wav")
         tempo = ml.estimate_tempo(sample_audio_file)
-        print(tempo)
+        print("Tempo: ", tempo)
 
         assert isinstance(tempo, (int, float)), "Tempo should be a numeric value"
         assert np.allclose(tempo, 105.46875, rtol=1e-5)
@@ -550,3 +552,106 @@ class Tests:
         assert np.array_equal(
             envelope, expected_envelope
         ), "Envelopes should be all zero."
+
+
+# This is created due to the fact that there are too many methods in the previous class
+# Ensuring PEP8 Structure is intact
+class TestsClass2:
+    """Test Class 2 Functions for the Machine Learning Client"""
+
+    @pytest.fixture
+    def mock_s3(self):
+        """Fixture for receiving the s3 values"""
+        with patch("machine_learning_client.ml.s3", s3):
+            yield s3
+
+    def test_create_and_store_midi_in_s3(self, mock_s3):
+        """This tests the creation of midi file and storing into s3 bucket"""
+
+        s3_bucket_name = "voice2midi"
+
+        # Mock input data for testing
+        filtered_notes = [{"note": "C4"}, {"note": "E4"}, {"note": "G4"}]
+        onsets = [0.1, 0.3, 0.6]
+        durations = [0.2, 0.3, 0.4]
+        tempo = 120
+
+        # Mock create_midi function
+        with patch("machine_learning_client.ml.create_midi") as mock_create_midi:
+            # Call the function with the mock data
+            midi_url = ml.create_and_store_midi_in_s3(
+                filtered_notes, onsets, durations, tempo
+            )
+
+            test_unique_id = re.search(r"output_([a-zA-Z0-9-]+).mid", midi_url).group(1)
+            mock_create_midi.return_value = f"output_{test_unique_id}.mid"
+
+            # Assertions
+            # Assets the name of the file matches with the ID
+            mock_create_midi.assert_called_once_with(
+                filtered_notes,
+                onsets,
+                durations,
+                tempo,
+                output_file=f"output_{test_unique_id}.mid",
+            )
+
+            # Asserts the upload path is the same.
+            s3.upload_file.assert_called_once_with(
+                f"static/output_{test_unique_id}.mid",
+                s3_bucket_name,
+                f"output_{test_unique_id}.mid",
+            )
+
+            # Asserts the midi_url is the same.
+            assert (
+                midi_url
+                == f"https://{s3_bucket_name}.s3.amazonaws.com/output_{test_unique_id}.mid"
+            )
+
+            # Check if create_midi includes the right argument for the filepath
+            assert "output_file" in mock_create_midi.call_args[1]
+            assert (
+                mock_create_midi.call_args[1]["output_file"]
+                == f"output_{test_unique_id}.mid"
+            )
+
+            # Check if upload_file was called with the correct local file path
+            assert (
+                mock_s3.upload_file.call_args[0][0]
+                == f"static/output_{test_unique_id}.mid"
+            )
+
+    @pytest.fixture
+    def client(self):
+        """Fixture for setting up flask client for testing"""
+        app.config["TESTING"] = True
+        with app.test_client() as client:
+            yield client
+
+    # def test_process_data(self, client):
+    #     """This tests the process data route using some temporary audio files"""
+
+    #     # Create a temporary audio file for testing
+    #     with tempfile.NamedTemporaryFile(
+    #         suffix=".webm", delete=False
+    #     ) as temp_webm_file:
+    #         temp_webm_file.write(b"Test recording data")
+    #         temp_webm_file.seek(0)
+
+    #         # Mock the request
+    #         data = {"audio": (temp_webm_file, "test_recording.webm")}
+
+    #         response = client.post(
+    #             "/process", data=data, content_type="multipart/form-data"
+    #         )
+
+    #         # Check the response status code
+    #         assert response.status_code == 200
+
+    #         # Check the response JSON content
+    #         response_data = json.loads(response.data)
+    #         assert "midi_url" in response_data
+
+    #     # Clean up temporary files
+    #     temp_webm_file.close()
