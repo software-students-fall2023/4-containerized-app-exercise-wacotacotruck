@@ -40,7 +40,7 @@ function sendAudioToServer(audioBlob, userID) {
   formData.append("user_id", userID);
   showLoader();
 
-  fetch("http://${host}:5002/process", {
+  fetch(`http://${host}:5002/process`, {
     method: "POST",
     body: formData,
   })
@@ -174,7 +174,7 @@ function uploadMidi() {
 
   const filename = midiSrc.split("/").pop();
 
-  fetch("http://${host}:5001/upload-midi", {
+  fetch(`http://${host}:5001/upload-midi`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
