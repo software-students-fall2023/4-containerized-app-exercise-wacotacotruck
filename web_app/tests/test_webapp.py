@@ -3,13 +3,12 @@ from unittest.mock import patch
 from flask import Flask 
 import pytest
 import mongomock
-# from .. import app
-from web_app.app import create_app
+from .. import app as ap
+# from web_app.app import create_app
 
 @pytest.fixture
 def app():
-    app = create_app()
-    return app
+    return ap
 
 class Tests1:
     """Test Functions for the Web App"""
