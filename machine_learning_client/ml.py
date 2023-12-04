@@ -170,7 +170,7 @@ def store_in_db(user_id, username, midi_url):
     }
 
     collection.insert_one(data)
-    # logging.info("Inserted file by: %s", username)
+    logging.info("Inserted file by: %s", username)
 
 
 @app.route("/process", methods=["POST"])

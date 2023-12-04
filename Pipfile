@@ -27,6 +27,8 @@ tensorflow = "*"
 pysoundfile = "*"
 update = "*"
 coverage = "*"
+mongomock = "*"
+pytest-flask = "*"
 
 [dev-packages]
 

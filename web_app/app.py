@@ -4,7 +4,8 @@ import os
 import logging
 from datetime import datetime
 from flask import Flask, url_for, redirect, render_template, session, request, jsonify
-import requests
+
+# import requests
 from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
@@ -74,7 +75,7 @@ def index():
 def browse():
     """Renders the browse page"""
     midi_collection = database_atlas["midis"]
-    midi_posts = midi_collection.find({})
+    midi_posts = midi_collection.find({}).sort("created_at", -1)
     return render_template("browse.html", midi_posts=list(midi_posts))
 
 
@@ -164,16 +165,16 @@ def mymidi():
     return render_template("login.html")
 
 
-def call_ml_client(data):
-    """Contacts the ml client"""
-    if "user_id" in session:
-        data["user_id"] = session.get("user_id")
-        # logging.info("Sending data to ML Client:", data)
-        response = requests.post("http://localhost:5002/process", json=data, timeout=10)
-        return response.json()
-    # else:
-    #     logging.info("User not logged in.")
-    return "Log in first!"
+# def call_ml_client(data):
+#     """Contacts the ml client"""
+#     if "user_id" in session:
+#         data["user_id"] = session.get("user_id")
+#         # logging.info("Sending data to ML Client:", data)
+#         response = requests.post("http://localhost:5002/process", json=data, timeout=10)
+#         return response.json()
+#     # else:
+#     #     logging.info("User not logged in.")
+#     return "Log in first!"
 
 
 # def call_ml_client(data):
@@ -200,11 +201,11 @@ def signup():
         errors = []
 
         # This checks if there is already a user that has this exact username
-        if database.users.find_one({"username": username}):
+        if database_atlas.users.find_one({"username": username}):
             errors.append("Username already exists!")
 
         # This checks if there is already a user that has this exact email
-        if database.users.find_one({"email": email}):
+        if database_atlas.users.find_one({"email": email}):
             errors.append("Email already used, try another or try logging in!")
 
         # This checks if the password is in between 8-20 characters

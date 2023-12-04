@@ -141,6 +141,156 @@ class Tests:
         assert response.status_code == 404
         assert response.json == {"error": "User not found"}
 
+    # @patch("web_app.app.database")
+    # def test_mymidi_user_logged_in(self, mock_db, client):
+    #     """Test mymidi page when user is logged in."""
+    #     mock_midi_collection = MagicMock()
+
+    #     mock_midi_data = [
+    #         {"user_id": self.mock_user_id, "midi_url": "http://example.com/midi1.mid"},
+    #         {"user_id": self.mock_user_id, "midi_url": "http://example.com/midi2.mid"}
+    #     ]
+
+    #     mock_cursor = MagicMock()
+    #     mock_cursor.sort.return_value = mock_midi_data
+    #     mock_midi_collection.find.return_value = mock_cursor
+    #     mock_db.return_value = {"midis": mock_midi_collection}
+
+    #     # Mock user session
+    #     with client.session_transaction() as session:
+    #         session["user_id"] = self.mock_user_id
+
+    #     response = client.get("/mymidi")
+    #     assert response.status_code == 200
+    #     assert all(midi['midi_url'] in str(response.data) for midi in mock_midi_data)
+
+    def test_mymidi_user_not_logged_in(self, client):
+        """Test mymidi page when user is not logged in."""
+        # Ensure user_id is not in session
+        with client.session_transaction() as session:
+            session.pop("user_id", None)
+
+        response = client.get("/mymidi")
+        assert response.status_code == 200
+        assert b"login.html" in response.data
+
+    def test_signup_page(self, client):
+        """Test that the signup page renders correctly"""
+        response = client.get("/signup")
+        assert response.status_code == 200
+        assert b"Sign Up" in response.data
+
+    @patch("web_app.app.database_atlas.users.find_one")
+    def test_signup_with_existing_username(self, mock_find_one, client):
+        """Test signup with an existing username"""
+
+        mock_find_one.return_value = {"username": "existing_user"}
+
+        new_user = {
+            "username": "existing_user",
+            "password": "Password123",
+            "confirm_password": "Password123",
+            "email": "exis_user@email.com",
+        }
+
+        # Ensure user_id is not in session
+        with client.session_transaction() as session:
+            session.pop("user_id", None)
+
+        response = client.post("/signup", data=new_user)
+
+        assert response.status_code == 200
+        assert b"Username already exists!" in response.data
+
+    # @patch("web_app.app.database_atlas.users.find_one")
+    # def test_signup_new_username(self, mock_find_one, client):
+    #     """Test successful signup"""
+
+    #     mock_find_one.return_value = None
+
+    #     new_user = {
+    #         "username": "newuser",
+    #         "password": "Password123",
+    #         "confirm_password": "Password123",
+    #         "email": "new_user@email.com",
+    #     }
+    #     # Ensure user_id is not in session
+    #     with client.session_transaction() as session:
+    #         session.pop("user_id", None)
+
+    #     response = client.post("/signup", data=new_user, headers={"Content-Type":
+    #  "application/json"})
+    #     assert response.status_code == 200
+    #     assert "/login" in response.headers["Location"]
+
+    def test_signup_password_too_short(self, client):
+        """Test signup with a password that is too short"""
+        data = {
+            "username": "user",
+            "password": "Zx25",
+            "confirm_password": "Zx25",
+            "email": "user@email.com",
+        }
+        response = client.post("/signup", data=data)
+        assert response.status_code == 200
+        assert b"Password must be between 8 and 20 characters long!" in response.data
+
+    def test_signup_password_too_long(self, client):
+        """Test signup with a password that is too long"""
+        data = {
+            "username": "user",
+            "password": "PasswordPass12345678912345",
+            "confirm_password": "PasswordPass12345678912345",
+            "email": "user@email.com",
+        }
+        response = client.post("/signup", data=data)
+        assert response.status_code == 200
+        assert b"Password must be between 8 and 20 characters long!" in response.data
+
+    def test_signup_password_no_digit(self, client):
+        """Test signup with a password that has no digits"""
+        data = {
+            "username": "user",
+            "password": "PassyPass",
+            "confirm_password": "PassyPass",
+            "email": "user@email.com",
+        }
+        response = client.post("/signup", data=data)
+        assert response.status_code == 200
+        assert b"Password should have at least one number!" in response.data
+
+    def test_signup_password_no_alphabet(self, client):
+        """Test signup with a password that has no alphabets"""
+        data = {
+            "username": "user",
+            "password": "12345678",
+            "confirm_password": "12345678",
+            "email": "user@email.com",
+        }
+        response = client.post("/signup", data=data)
+        assert response.status_code == 200
+        assert b"Password should have at least one alphabet!" in response.data
+
+    def test_login_user_logged_in(self, client):
+        """Test login route when user is logged in."""
+        with client.session_transaction() as session:
+            session["user_id"] = "some_user_id"
+
+        response = client.get("/login")
+
+        assert response.status_code == 302
+        assert "/" in response.headers["Location"]
+
+    def test_login_user_not_logged_in(self, client):
+        """Test login route when user is not logged in."""
+        with client.session_transaction() as session:
+            session.pop("user_id", None)
+
+        response = client.get("/login")
+
+        assert response.status_code == 200
+        assert b"login.html" in response.data
+
     def test_login_auth_success(self, client):
         """Test successful login authentication."""
         # Prepare test data
