@@ -27,22 +27,6 @@ Before you start the steps below, make sure you have the following downloaded on
 - [Docker](https://docs.docker.com/get-docker/)
 - [Docker Compose](https://docs.docker.com/compose/install/)
 
-Also: 
-1. Go to [AWS website](https://aws.amazon.com/cli/) and download AWS Command Line Interface based on your operating system.
-2. Go to terminal and type the following line:
-```
-aws configure
-```
-Follow the prompt and provide values:
-
-```
-AWS Access Key ID: <Value for variable AWS_ACCESS_KEY_ID in provided .env file>
-AWS Secret Access Key: <Value for variable AWS_SECRET_ACCESS_KEY in provided .env file>
-Default region name: us-east-1
-Default output format: json
-```
-
-
 ### Running the Application:
 
 1. Clone the repository:
@@ -64,7 +48,7 @@ AWS_SECRET_ACCESS_KEY
 S3_BUCKET_NAME
 
 
-.env for machine_learning_client/ folder:
+.env for web_app/ folder:
 
 MONGO_DBNAME
 MONGO_URI
