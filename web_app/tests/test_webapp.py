@@ -2,6 +2,7 @@
 import pytest
 import mongomock
 from web_app import app
+from unittest.mock import patch
 
 class Tests1:
     """Test Functions for the Web App"""
@@ -19,20 +20,21 @@ class Tests1:
         assert actual == expected, "Expected True to be equal to True!"
 
     @pytest.fixture
-    def mock(self):
-        # Mock database
-        with mongomock.patch(servers=(('server.example.com', 27017),)):
+    def mock_app():
+        """Mocking the database to test functions."""
+        with patch('web_app.MongoClient', return_value=mongomock.MongoClient()):
+            app.config['TESTING'] = True
             yield app
 
     @pytest.fixture
-    def client(self, mock):
+    def client(self, mock_app):
         """Create a test client for the Flask application."""
-        return mock.test_client()
+        return mock_app.test_client()
     
     @pytest.fixture
-    def runner(self, mock):
+    def runner(self, mock_app):
         """Create a test command-line runner for the Flask application."""
-        return mock.test_cli_runner()
+        return mock_app.test_cli_runner()
     
     def test_signup_page(self, client):
         """Test that the signup page renders correctly"""
@@ -50,7 +52,7 @@ class Tests1:
             'email': 'exis_user@email.com'
         }
         response = client.post('/signup', data=new_user)
-        assert response.status_code == 200  
+        assert response.status_code == 200
         assert b'Username already exists!' in response.data
 
     def test_signup_successful(self, client):
