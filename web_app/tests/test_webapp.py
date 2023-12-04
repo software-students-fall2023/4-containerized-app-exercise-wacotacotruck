@@ -1,10 +1,7 @@
 """Module for Testing Python Functions"""
 import pytest
-from flask import Flask, session, template_rendered
-from werkzeug.security import generate_password_hash
 import mongomock
-from web_app import app as app
-from contextlib import contextmanager
+from web_app import app
 
 class Tests1:
     """Test Functions for the Web App"""
@@ -22,7 +19,7 @@ class Tests1:
         assert actual == expected, "Expected True to be equal to True!"
 
     @pytest.fixture
-    def app():
+    def app(self):
         app.config.update({
             "TESTING": True,
         })
@@ -32,20 +29,20 @@ class Tests1:
             yield app
 
     @pytest.fixture
-    def client(app):
+    def client(self, app):
         return app.test_client()
     
     @pytest.fixture
-    def runner(app):
+    def runner(self, app):
         return app.test_cli_runner()
     
-    def test_signup_page(client):
+    def test_signup_page(self, client):
         """Test that the signup page renders correctly"""
         response = client.get('/signup')
         assert response.status_code == 200
         assert b'Sign Up' in response.data
 
-    def test_signup_with_existing_username(client, app):
+    def test_signup_with_existing_username(self, client):
         """Test signup with an existing username"""
         # Assume 'existing_user' is already in the database
         new_user = {
@@ -58,7 +55,7 @@ class Tests1:
         assert response.status_code == 200  
         assert b'Username already exists!' in response.data  
 
-    def test_signup_successful(client, app):
+    def test_signup_successful(self, client):
         """Test successful signup"""
         new_user = {
             'username': 'newuser',
@@ -70,7 +67,7 @@ class Tests1:
         assert response.status_code == 302  
         assert b'/login' in response.headers['Location']
 
-    def test_signup_password_too_short(client):
+    def test_signup_password_too_short(self, client):
         """Test signup with a password that is too short"""
         data = {
             'username': 'user',
@@ -83,7 +80,7 @@ class Tests1:
         assert b'Password must be between 8 and 20 characters long!' in response.data
 
 
-    def test_signup_password_too_long(client):
+    def test_signup_password_too_long(self, client):
         """Test signup with a password that is too long"""
         data = {
             'username': 'user',
@@ -95,7 +92,7 @@ class Tests1:
         assert response.status_code == 200
         assert b'Password must be between 8 and 20 characters long!' in response.data
 
-    def test_signup_password_no_digit(client):
+    def test_signup_password_no_digit(self, client):
         """Test signup with a password that has no digits"""
         data = {
             'username': 'user',
@@ -107,7 +104,7 @@ class Tests1:
         assert response.status_code == 200
         assert b'Password should have at least one number!' in response.data
 
-    def test_signup_password_no_alphabet(client):
+    def test_signup_password_no_alphabet(self, client):
         """Test signup with a password that has no alphabets"""
         data = {
             'username': 'user',
@@ -119,13 +116,13 @@ class Tests1:
         assert response.status_code == 200
         assert b'Password should have at least one alphabet!' in response.data
     
-    def test_login_page_not_logged_in(client):
+    def test_login_page_not_logged_in(self, client):
         """Test that the login page is rendered when not logged in"""
         response = client.get('/login')
         assert response.status_code == 200
         assert b'login.html' in response.data
 
-    def test_login_page_redirect_when_logged_in(client, app):
+    def test_login_page_redirect_when_logged_in(self, client):
         """Test that user is redirected to the home page when logged in"""
         with client:
             with client.session_transaction() as sess:
