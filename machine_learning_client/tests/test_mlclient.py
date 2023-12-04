@@ -1,6 +1,4 @@
 """Module for Testing Python Functions"""
-# import json
-# import tempfile
 import random
 import os
 from unittest.mock import MagicMock, patch
@@ -10,7 +8,7 @@ import pytest
 import numpy as np
 import pretty_midi
 from .. import ml
-from ..ml import s3, app
+from ..ml import s3
 
 # Mocking AWS S3
 S3_BUCKET_NAME = "voice2midi"
@@ -424,7 +422,7 @@ class TestsClass1:
         test_dir = os.path.dirname(__file__)
         sample_audio_file = os.path.join(test_dir, "test_audio.wav")
         tempo = ml.estimate_tempo(sample_audio_file)
-        print("Tempo: ", tempo)
+        print(tempo)
 
         assert isinstance(tempo, (int, float)), "Tempo should be a numeric value"
         assert np.allclose(tempo, 105.46875, rtol=1e-5)
@@ -531,6 +529,29 @@ class TestsClass1:
             == expected_filepath
         )
 
+    def test_estimate_note_durations_no_onsets(self):
+        """Test estimating note durations with no onsets."""
+        onsets = []  # Empty list of onsets
+        y = np.random.randn(44100)  # Mock audio signal with 1-second duration
+
+        durations = ml.estimate_note_durations(onsets, y, sr=44100, threshold=0.025)
+
+        assert not durations, "Durations should be an empty list with no onsets."
+
+    def test_calculate_amplitude_envelope_zeros(self):
+        """Test calculating amplitude envelope for signal with all zero values."""
+        test_signal = np.zeros(10)  # Signal with all zero values
+
+        envelope = ml.calculate_amplitude_envelope(
+            test_signal, frame_size=3, hop_length=3
+        )
+
+        expected_envelope = np.zeros(4)  # Expected envelope with all zero values
+
+        assert np.array_equal(
+            envelope, expected_envelope
+        ), "Envelopes should be all zero."
+
 
 # This is created due to the fact that there are too many methods in the previous class
 # Ensuring PEP8 Structure is intact
@@ -545,6 +566,8 @@ class TestsClass2:
 
     def test_create_and_store_midi_in_s3(self, mock_s3):
         """This tests the creation of midi file and storing into s3 bucket"""
+
+        s3_bucket_name = "voice2midi"
 
         # Mock input data for testing
         filtered_notes = [{"note": "C4"}, {"note": "E4"}, {"note": "G4"}]
@@ -573,16 +596,16 @@ class TestsClass2:
             )
 
             # Asserts the upload path is the same.
-            mock_s3.upload_file.assert_called_once_with(
+            s3.upload_file.assert_called_once_with(
                 f"static/output_{test_unique_id}.mid",
-                S3_BUCKET_NAME,
+                s3_bucket_name,
                 f"output_{test_unique_id}.mid",
             )
 
             # Asserts the midi_url is the same.
             assert (
                 midi_url
-                == f"https://{S3_BUCKET_NAME}.s3.amazonaws.com/output_{test_unique_id}.mid"
+                == f"https://{s3_bucket_name}.s3.amazonaws.com/output_{test_unique_id}.mid"
             )
 
             # Check if create_midi includes the right argument for the filepath
@@ -597,37 +620,3 @@ class TestsClass2:
                 mock_s3.upload_file.call_args[0][0]
                 == f"static/output_{test_unique_id}.mid"
             )
-
-    @pytest.fixture
-    def client(self):
-        """Fixture for setting up flask client for testing"""
-        app.config["TESTING"] = True
-        with app.test_client() as client:
-            yield client
-
-    # def test_process_data(self, client):
-    #     """This tests the process data route using some temporary audio files"""
-
-    #     # Create a temporary audio file for testing
-    #     with tempfile.NamedTemporaryFile(
-    #         suffix=".webm", delete=False
-    #     ) as temp_webm_file:
-    #         temp_webm_file.write(b"Test recording data")
-    #         temp_webm_file.seek(0)
-
-    #         # Mock the request
-    #         data = {"audio": (temp_webm_file, "test_recording.webm")}
-
-    #         response = client.post(
-    #             "/process", data=data, content_type="multipart/form-data"
-    #         )
-
-    #         # Check the response status code
-    #         assert response.status_code == 200
-
-    #         # Check the response JSON content
-    #         response_data = json.loads(response.data)
-    #         assert "midi_url" in response_data
-
-    #     # Clean up temporary files
-    #     temp_webm_file.close()
