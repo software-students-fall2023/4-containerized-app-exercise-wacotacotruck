@@ -14,16 +14,8 @@ from bson import ObjectId
 from botocore.exceptions import ClientError
 from flask_session import Session
 
-def create_app(test_config=None):
-    app = Flask(__name__)
-
-    if test_config:
-        app.config.update(test_config)
-
-    return app
-
 # Initializes Flask application and loads the .env file from the MongoDB Atlas Database
-app = create_app()
+app = Flask(__name__)
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
@@ -172,16 +164,16 @@ def mymidi():
     return render_template("login.html")
 
 
-def call_ml_client(data):
-    """Contacts the ml client"""
-    if "user_id" in session:
-        data["user_id"] = session.get("user_id")
-        # logging.info("Sending data to ML Client:", data)
-        response = requests.post("http://localhost:5002/process", json=data, timeout=10)
-        return response.json()
-    # else:
-    #     logging.info("User not logged in.")
-    return "Log in first!"
+# def call_ml_client(data):
+#     """Contacts the ml client"""
+#     if "user_id" in session:
+#         data["user_id"] = session.get("user_id")
+#         # logging.info("Sending data to ML Client:", data)
+#         response = requests.post("http://localhost:5002/process", json=data, timeout=10)
+#         return response.json()
+#     # else:
+#     #     logging.info("User not logged in.")
+#     return "Log in first!"
 
 
 # def call_ml_client(data):
@@ -208,11 +200,11 @@ def signup():
         errors = []
 
         # This checks if there is already a user that has this exact username
-        if database.users.find_one({"username": username}):
+        if database_atlas.users.find_one({"username": username}):
             errors.append("Username already exists!")
 
         # This checks if there is already a user that has this exact email
-        if database.users.find_one({"email": email}):
+        if database_atlas.users.find_one({"email": email}):
             errors.append("Email already used, try another or try logging in!")
 
         # This checks if the password is in between 8-20 characters
