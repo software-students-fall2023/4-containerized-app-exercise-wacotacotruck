@@ -19,11 +19,6 @@ class Tests1:
         actual = True
         expected = True
         assert actual == expected, "Expected True to be equal to True!"
-
-    @pytest.fixture
-    def client(self):
-        """Create a test client for the Flask application."""
-        return app.test_client()
     
     @pytest.fixture(autouse=True)
     def mock_mongo(self):

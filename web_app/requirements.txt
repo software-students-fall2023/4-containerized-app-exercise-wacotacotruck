@@ -10,3 +10,4 @@ Flask-Cors==3.0.10
 pytest
 boto3
 mongomock
+pytest-flask
