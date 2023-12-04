@@ -8,7 +8,7 @@ from web_app.app import create_app
 
 @pytest.fixture
 def app():
-    app = create_app({'TESTING': True})
+    app = create_app({'TESTING': True, 'WTF_CSRF_ENABLED': False})
     yield app
 
 class Tests1:
@@ -25,6 +25,11 @@ class Tests1:
         actual = True
         expected = True
         assert actual == expected, "Expected True to be equal to True!"
+
+    @pytest.fixture
+    def client(app):
+        with app.test_client() as client:
+            yield client
 
     @pytest.fixture(autouse=True)
     def mock_mongo(self):
