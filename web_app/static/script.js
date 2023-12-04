@@ -2,7 +2,7 @@ let mediaRecorder;
 let audioChunks = [];
 let isRecording = false;
 
-const host = "localhost";
+const host = "159.65.44.240";
 
 function startRecording() {
   navigator.mediaDevices

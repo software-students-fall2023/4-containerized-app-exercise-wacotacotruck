@@ -1,13 +1,24 @@
 ![Workflow Status](https://github.com/software-students-fall2023/4-containerized-app-exercise-wacotacotruck/actions/workflows/lint.yml/badge.svg?branch=main&kill_cache=1)
 ![Workflow Status](https://github.com/software-students-fall2023/4-containerized-app-exercise-wacotacotruck/actions/workflows/frontend.yml/badge.svg?branch=main&kill_cache=1)
 ![Workflow Status](https://github.com/software-students-fall2023/4-containerized-app-exercise-wacotacotruck/actions/workflows/backend.yml/badge.svg?branch=main&kill_cache=1)
-![Workflow Status](https://github.com/software-students-fall2023/4-containerized-app-exercise-wacotacotruck/actions/workflows/ci.yml/badge.svg?branch=main&kill_cache=1)
-
+![Workflow Status](https://github.com/software-students-fall2023/4-containerized-app-exercise-wacotacotruck/actions/workflows/ci-cd.yml/badge.svg?branch=main&kill_cache=1)
 
 # Sing & Sync
 
 Build a containerized app that uses machine learning. See [instructions](./instructions.md) for details.
-- [Live Demo](http://159.65.44.240:5001/)
+
+## [Live Demo](http://159.65.44.240:5001/)
+If using Google Chrome, follow these steps to address microphone access issues in the live demo:
+
+1. **Open Chrome Flags**:
+   - Type `chrome://flags/#unsafely-treat-insecure-origin-as-secure` in the address bar and press Enter.
+
+2. **Enable Insecure Origins**:
+   - Add `http://159.65.44.240:5001/` in the "Insecure origins treated as secure" section.
+   - Change dropdown to 'Enabled'.
+
+3. **Relaunch Chrome**:
+   - Click 'Relaunch' to apply changes.
 
 ## Team Members: 
 - [Aditya Pandhare](https://github.com/awesomeadi00)
