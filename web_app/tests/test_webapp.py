@@ -1,8 +1,10 @@
 """Module for Testing Python Functions"""
 from unittest.mock import patch
+from flask import Flask 
 import pytest
 import mongomock
-from .. import app
+# from .. import app
+from web_app.app import create_app
 
 
 class Tests1:
@@ -21,10 +23,10 @@ class Tests1:
         assert actual == expected, "Expected True to be equal to True!"
 
     @pytest.fixture
-    def app(self):
-        """Return app."""
+    def app():
+        app = create_app()
         return app
-    
+
     @pytest.fixture(autouse=True)
     def mock_mongo(self):
         """Mocking MongoDB and auto-using for each test."""
