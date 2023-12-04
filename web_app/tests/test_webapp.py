@@ -26,7 +26,7 @@ class Tests1:
         return app.test_client()
     
     @pytest.fixture(autouse=True)
-    def mock_mongo(self, monkeypatch):
+    def mock_mongo(self):
         """Mocking MongoDB and auto-using for each test."""
         with mongomock.patch(servers=(('server.example.com', 27017),)):
             yield
