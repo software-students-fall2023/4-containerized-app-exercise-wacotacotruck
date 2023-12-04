@@ -6,6 +6,10 @@ import mongomock
 # from .. import app
 from web_app.app import create_app
 
+@pytest.fixture
+def app():
+    app = create_app()
+    return app
 
 class Tests1:
     """Test Functions for the Web App"""
@@ -21,11 +25,6 @@ class Tests1:
         actual = True
         expected = True
         assert actual == expected, "Expected True to be equal to True!"
-
-    @pytest.fixture
-    def app():
-        app = create_app()
-        return app
 
     @pytest.fixture(autouse=True)
     def mock_mongo(self):
