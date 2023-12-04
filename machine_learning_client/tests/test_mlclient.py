@@ -5,14 +5,12 @@ from datetime import datetime
 from unittest.mock import MagicMock, patch
 import subprocess
 import re
-
-# import logging
-# from bson import ObjectId
+import tempfile
 import pytest
 import numpy as np
 import pretty_midi
 from .. import ml
-from ..ml import s3
+from ..ml import s3, app
 
 # Mocking AWS S3
 s3 = MagicMock()
@@ -696,3 +694,37 @@ class TestsClass2:
             # Assertions
             assert result == ""
             assert "User not found for user_id" in caplog.text
+
+    @pytest.fixture
+    def client(self):
+        """Test client for web app"""
+        app.config["TESTING"] = True
+        with app.test_client() as test_client:
+            yield test_client
+
+    def test_missing_audio_field(self, client):
+        """Test when the 'audio' field is missing in the request"""
+
+        response = client.post("/process", data={"user_id": "123"})
+        assert response.status_code == 500
+
+    def test_unsupported_audio_format(self, client):
+        """Test when the uploaded audio format is unsupported"""
+
+        with tempfile.NamedTemporaryFile(suffix=".txt") as txt_file:
+            response = client.post(
+                "/process",
+                data={"audio": (txt_file, "test_audio.txt"), "user_id": "123"},
+            )
+        assert response.status_code == 415
+
+    def test_io_error(self, client, monkeypatch):
+        """Test when an IO error occurs (simulating missing ffmpeg)"""
+
+        monkeypatch.setenv("PATH", "")  # Remove PATH to simulate missing ffmpeg
+        with tempfile.NamedTemporaryFile(suffix=".webm") as webm_file:
+            response = client.post(
+                "/process",
+                data={"audio": (webm_file, "test_audio.webm"), "user_id": "123"},
+            )
+        assert response.status_code == 415
