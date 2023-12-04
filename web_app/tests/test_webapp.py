@@ -270,7 +270,7 @@ class Tests:
         response = client.post("/signup", data=data)
         assert response.status_code == 200
         assert b"Password should have at least one alphabet!" in response.data
-  
+
     def test_login_user_logged_in(self, client):
         """Test login route when user is logged in."""
         with client.session_transaction() as session:
