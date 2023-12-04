@@ -18,6 +18,15 @@ Sing & Sync is a web application that utilizes the power of machine learning to 
 
 ## Setup: 
 
+### Prerequisites: 
+
+Before you start the steps below, make sure you have the following downloaded on your system: 
+
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+
+### Running the Application:
+
 1. Clone the repository:
 ```
 git clone https://github.com/software-students-fall2023/4-containerized-app-exercise-wacotacotruck.git
@@ -57,7 +66,7 @@ docker compose up --build -d
 
 5. Open the application in your browser:
 ```
-http://localhost:5000
+http://localhost:5001
 ```
 
 6. To stop the containers, run the command: 
