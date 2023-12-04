@@ -141,28 +141,67 @@ class Tests:
         assert response.status_code == 404
         assert response.json == {"error": "User not found"}
 
-    # @patch("web_app.app.database")
-    # def test_mymidi_user_logged_in(self, mock_db, client):
-    #     """Test mymidi page when user is logged in."""
-    #     mock_midi_collection = MagicMock()
+    def test_upload_midi_success(self, client):
+        """Test upload midi success"""
 
-    #     mock_midi_data = [
-    #         {"user_id": self.mock_user_id, "midi_url": "http://example.com/midi1.mid"},
-    #         {"user_id": self.mock_user_id, "midi_url": "http://example.com/midi2.mid"}
-    #     ]
+        user_id = "62a23958e5a9e9b88f853a67"
 
-    #     mock_cursor = MagicMock()
-    #     mock_cursor.sort.return_value = mock_midi_data
-    #     mock_midi_collection.find.return_value = mock_cursor
-    #     mock_db.return_value = {"midis": mock_midi_collection}
+        with patch("web_app.app.database_atlas") as mock_db:
+            # Mock the necessary MongoDB operations
+            mock_users = mock_db.users
+            mock_users.find_one.return_value = {
+                "_id": ObjectId(user_id),
+                "username": "testuser",
+            }
+            mock_midis = mock_db["midis"]
+            mock_midis.insert_one = MagicMock()
 
-    #     # Mock user session
-    #     with client.session_transaction() as session:
-    #         session["user_id"] = self.mock_user_id
+            # Simulate a logged-in user
+            with client.session_transaction() as sess:
+                sess["user_id"] = user_id
 
-    #     response = client.get("/mymidi")
-    #     assert response.status_code == 200
-    #     assert all(midi['midi_url'] in str(response.data) for midi in mock_midi_data)
+            # Data to send in the request
+            data = {"filename": "testfile.midi"}
+
+            # Make a POST request to the upload-midi route
+            response = client.post("/upload-midi", json=data)
+
+            # Check if the response is as expected
+            assert response.status_code == 200
+            assert response.json == {"message": "MIDI URL uploaded successfully"}
+
+            # Verify MongoDB interactions
+            assert mock_users.find_one.called
+            assert mock_midis.insert_one.called
+
+    def test_mymidi_user_logged_in(self, client):
+        """Test mymidi page when user is logged in."""
+        user_id = "62a23958e5a9e9b88f853a67"
+
+        mock_cursor = MagicMock()
+        mock_cursor.sort.return_value = [
+            {"_id": "midi_id", "midi_url": "some_url", "created_at": "some_date"}
+        ]
+
+        with patch("web_app.app.database") as mock_db:
+            # Setup mock for the 'midis' collection
+            mock_midis = MagicMock()
+            mock_midis.find.return_value = mock_cursor
+            mock_db.__getitem__.return_value = mock_midis
+
+            # Simulate a logged-in user
+            with client.session_transaction() as sess:
+                sess["user_id"] = user_id
+
+            # Make a GET request to the /mymidi route
+            response = client.get("/mymidi")
+
+            # Check if the response is as expected
+            assert response.status_code == 200
+
+            # Verify MongoDB interactions
+            mock_midis.find.assert_called_with({"user_id": user_id})
+            mock_cursor.sort.assert_called_with("created_at", -1)
 
     def test_mymidi_user_not_logged_in(self, client):
         """Test mymidi page when user is not logged in."""
