@@ -26,6 +26,8 @@ aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
 aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
 s3_bucket_name = os.getenv("S3_BUCKET_NAME")
 
+host = os.getenv("HOST", "localhost")
+
 s3 = boto3.client(
     "s3",
     aws_access_key_id=aws_access_key_id,
@@ -381,4 +383,4 @@ def logout():
 
 # Executing the Flask Application:
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False, host="0.0.0.0", port=5001, ssl_context="adhoc")

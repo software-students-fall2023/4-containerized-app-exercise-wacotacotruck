@@ -1,10 +1,24 @@
 ![Workflow Status](https://github.com/software-students-fall2023/4-containerized-app-exercise-wacotacotruck/actions/workflows/lint.yml/badge.svg?branch=main&kill_cache=1)
 ![Workflow Status](https://github.com/software-students-fall2023/4-containerized-app-exercise-wacotacotruck/actions/workflows/frontend.yml/badge.svg?branch=main&kill_cache=1)
 ![Workflow Status](https://github.com/software-students-fall2023/4-containerized-app-exercise-wacotacotruck/actions/workflows/backend.yml/badge.svg?branch=main&kill_cache=1)
+![Workflow Status](https://github.com/software-students-fall2023/4-containerized-app-exercise-wacotacotruck/actions/workflows/ci-cd.yml/badge.svg?branch=main&kill_cache=1)
 
 # Sing & Sync
 
 Build a containerized app that uses machine learning. See [instructions](./instructions.md) for details.
+
+## [Live Demo](http://159.65.44.240:5001/)
+If using Google Chrome, follow these steps to address microphone access issues in the live demo:
+
+1. **Open Chrome Flags**:
+   - Type `chrome://flags/#unsafely-treat-insecure-origin-as-secure` in the address bar and press Enter.
+
+2. **Enable Insecure Origins**:
+   - Add `http://159.65.44.240:5001/` in the "Insecure origins treated as secure" section.
+   - Change dropdown to 'Enabled'.
+
+3. **Relaunch Chrome**:
+   - Click 'Relaunch' to apply changes.
 
 ## Team Members: 
 - [Aditya Pandhare](https://github.com/awesomeadi00)
@@ -27,17 +41,17 @@ Before you start the steps below, make sure you have the following downloaded on
 
 **Download AWS Command Line Interface:**
 
-1. Go to [AWS website](https://aws.amazon.com/cli/) and download AWS Command Line Interface based on your operating system.
-2. Go to terminal and type the following line: `aws configure`
-3. Follow the prompt and provide values:
-```
-AWS Access Key ID: <Value for variable AWS_ACCESS_KEY_ID in provided .env file>
-AWS Secret Access Key: <Value for variable AWS_SECRET_ACCESS_KEY in provided .env file>
-Default region name: us-east-1
-Default output format: json
-```
+ 1. Go to [AWS website](https://aws.amazon.com/cli/) and download AWS Command Line Interface based on your operating system.
+ 2. Go to terminal and type the following line: `aws configure`
+ 3. Follow the prompt and provide values:
+ ```
+ AWS Access Key ID: <Value for variable AWS_ACCESS_KEY_ID in provided .env file>
+ AWS Secret Access Key: <Value for variable AWS_SECRET_ACCESS_KEY in provided .env file>
+ Default region name: us-east-1
+ Default output format: json
+ ```
 
-### Running the Application Locally:
+### Running the Application:
 
 1. Clone the repository:
 ```

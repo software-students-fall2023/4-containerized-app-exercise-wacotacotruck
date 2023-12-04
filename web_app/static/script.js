@@ -2,6 +2,8 @@ let mediaRecorder;
 let audioChunks = [];
 let isRecording = false;
 
+const host = "159.65.44.240";
+
 function startRecording() {
   navigator.mediaDevices
     .getUserMedia({ audio: true })
@@ -38,7 +40,7 @@ function sendAudioToServer(audioBlob, userID) {
   formData.append("user_id", userID);
   showLoader();
 
-  fetch("http://localhost:5002/process", {
+  fetch(`http://${host}:5002/process`, {
     method: "POST",
     body: formData,
   })
@@ -172,7 +174,7 @@ function uploadMidi() {
 
   const filename = midiSrc.split("/").pop();
 
-  fetch("http://localhost:5001/upload-midi", {
+  fetch(`http://${host}:5001/upload-midi`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

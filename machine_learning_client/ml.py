@@ -32,6 +32,8 @@ aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
 aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
 s3_bucket_name = os.getenv("S3_BUCKET_NAME")
 
+host = os.getenv("HOST", "localhost")
+
 s3 = boto3.client(
     "s3",
     aws_access_key_id=aws_access_key_id,
@@ -121,7 +123,7 @@ def generate_midi_url(filtrd_comb_notes, onsets, drtns, tempo):
         filtrd_comb_notes, onsets, drtns, tempo, output_file="output.mid"
     )
     # drtns = durations; had to edit because of pylint 0_0
-    midi_url = f"http://localhost:5002/static/{midi_filename}"
+    midi_url = f"http://{host}:5002/static/{midi_filename}"
 
     return midi_url
 
