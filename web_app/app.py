@@ -14,8 +14,12 @@ import boto3
 from bson import ObjectId
 from botocore.exceptions import ClientError
 
-def create_app():
-    app = Flask(__name__)
+def create_app(test_config=None):
+    app = Flask(__name__, instance_relative_config=True)
+
+    if test_config:
+        app.config.update(test_config)
+
     return app
 
 # Initializes Flask application and loads the .env file from the MongoDB Atlas Database
