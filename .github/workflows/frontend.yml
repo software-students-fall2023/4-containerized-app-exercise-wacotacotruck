@@ -33,8 +33,7 @@ jobs:
       - name: Testing with pytest
         run: |
           cd web_app/tests
-          sudo apt-get install libsndfile1
-          pipenv run python -m pytest -s
+          pipenv run python -m pytest
         env: 
           S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
