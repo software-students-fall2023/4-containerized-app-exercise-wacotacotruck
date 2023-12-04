@@ -2,7 +2,7 @@ version: "3"
 services:
   web-app:
     build:
-      context: ./web-app
+      context: ./web_app
       dockerfile: Dockerfile.web
     image: ${DOCKERHUB_USERNAME}/web-app:latest
     ports:
