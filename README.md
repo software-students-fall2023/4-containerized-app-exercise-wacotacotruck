@@ -7,6 +7,7 @@
 # Sing & Sync
 
 Build a containerized app that uses machine learning. See [instructions](./instructions.md) for details.
+- [Live Demo](http://159.65.44.240:5001/)
 
 ## Team Members: 
 - [Aditya Pandhare](https://github.com/awesomeadi00)
