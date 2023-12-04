@@ -24,8 +24,6 @@ jobs:
           MONGO_DBNAME: ${{ secrets.MONGO_DBNAME }}
           MONGO_URI: ${{ secrets.MONGO_URI }}
           FLASK_APP: ${{ secrets.FLASK_APP }}
-          GITHUB_SECRET: ${{ secrets.GITHUB_SECRET }}
-          GITHUB_REPO: ${{ secrets.GITHUB_REPO }}
           APP_SECRET_KEY: ${{ secrets.APP_SECRET_KEY }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

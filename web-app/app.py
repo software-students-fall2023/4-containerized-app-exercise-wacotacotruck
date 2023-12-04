@@ -21,6 +21,7 @@ sess.init_app(app)
 
 # Establish a database connection with the MONGO_URI (MongoDB Atlas connection)
 client = MongoClient(os.getenv("MONGO_URI"))
+host = os.getenv("HOST", "localhost")
 
 # Checks if the connection has been made, else make an error printout
 try:

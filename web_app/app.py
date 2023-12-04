@@ -50,13 +50,13 @@ try:
     client_atlas.admin.command("ping")
     database_atlas = client_atlas[os.getenv("MONGO_DBNAME")]
     print("* Connected to MongoDB!")
-# except ConnectionError as err:
-#     print('* "Failed to connect to MongoDB at', os.getenv("MONGO_URI"))
-#     print("Database connection error:", err)
-
-except Exception as err:
+except ConnectionError as err:
     print('* "Failed to connect to MongoDB at', os.getenv("MONGO_URI"))
     print("Database connection error:", err)
+
+# except Exception as err:
+#     print('* "Failed to connect to MongoDB at', os.getenv("MONGO_URI"))
+#     print("Database connection error:", err)
 
 # Connect to MongoDB
 client = MongoClient("db", 27017)
