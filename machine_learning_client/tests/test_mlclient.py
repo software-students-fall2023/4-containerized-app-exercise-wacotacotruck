@@ -5,6 +5,7 @@ from datetime import datetime
 from unittest.mock import MagicMock, patch
 import subprocess
 import re
+
 # import logging
 # from bson import ObjectId
 import pytest
@@ -655,7 +656,6 @@ class TestsClass2:
         ml.store_in_db(user_id, "", midi_url)
         assert "Username not found" in caplog.text
 
-
     def test_find_username_success(self):
         """Test finding username with a valid user id."""
 
@@ -665,8 +665,9 @@ class TestsClass2:
         # Mocking the user document in the database
         mock_user_doc = {"_id": "some_object_id", "username": expected_username}
 
-        with patch("machine_learning_client.ml.ObjectId") as mock_object_id, \
-             patch("machine_learning_client.ml.db") as mock_db:
+        with patch("machine_learning_client.ml.ObjectId") as mock_object_id, patch(
+            "machine_learning_client.ml.db"
+        ) as mock_db:
             mock_object_id.return_value = "some_object_id"
             mock_db["users"].find_one.return_value = mock_user_doc
 
@@ -677,15 +678,15 @@ class TestsClass2:
             assert result == expected_username
             mock_db["users"].find_one.assert_called_once_with({"_id": "some_object_id"})
 
-
     def test_find_username_user_not_found(self, caplog):
         """Test finding username when the user is not found in the database."""
 
         user_id = "non_existent_user_id"
 
         # Mocking the case where user is not found in the database
-        with patch("machine_learning_client.ml.ObjectId") as mock_object_id, \
-             patch("machine_learning_client.ml.db") as mock_db:
+        with patch("machine_learning_client.ml.ObjectId") as mock_object_id, patch(
+            "machine_learning_client.ml.db"
+        ) as mock_db:
             mock_object_id.return_value = "some_object_id"
             mock_db["users"].find_one.return_value = None
 
