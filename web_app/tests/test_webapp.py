@@ -279,7 +279,7 @@ class Tests:
         response = client.get("/login")
 
         assert response.status_code == 302
-        assert '/' in response.headers['Location']
+        assert "/" in response.headers["Location"]
 
     def test_login_user_not_logged_in(self, client):
         """Test login route when user is not logged in."""
