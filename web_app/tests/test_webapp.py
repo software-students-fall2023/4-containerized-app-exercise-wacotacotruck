@@ -185,7 +185,7 @@ class Tests:
         """Test signup with an existing username"""
 
         mock_find_one.return_value = {"username": "existing_user"}
-        
+
         new_user = {
             "username": "existing_user",
             "password": "Password123",
@@ -195,13 +195,13 @@ class Tests:
 
         # Ensure user_id is not in session
         with client.session_transaction() as session:
-            session.pop("user_id", None) 
+            session.pop("user_id", None)
 
         response = client.post("/signup", data=new_user)
 
         assert response.status_code == 200
         assert b"Username already exists!" in response.data
-    
+
     # @patch("web_app.app.database_atlas.users.find_one")
     # def test_signup_new_username(self, mock_find_one, client):
     #     """Test successful signup"""
@@ -216,32 +216,13 @@ class Tests:
     #     }
     #     # Ensure user_id is not in session
     #     with client.session_transaction() as session:
-    #         session.pop("user_id", None) 
-            
-    #     response = client.post("/signup", data=new_user, headers={"Content-Type": "application/json"})
+    #         session.pop("user_id", None)
+
+    #     response = client.post("/signup", data=new_user, headers={"Content-Type":
+    #  "application/json"})
     #     assert response.status_code == 200
     #     assert "/login" in response.headers["Location"]
 
-    def test_login_user_logged_in(self, client):
-        """Test login route when user is logged in."""
-        with client.session_transaction() as session:
-            session["user_id"] = "some_user_id"
-
-        response = client.get("/login")
-
-        assert response.status_code == 302
-        assert '/' in response.headers['Location']
-
-    def test_login_user_not_logged_in(self, client):
-        """Test login route when user is not logged in."""
-        with client.session_transaction() as session:
-            session.pop("user_id", None)
-
-        response = client.get("/login")
-
-        assert response.status_code == 200
-        assert b"login.html" in response.data
-    
     def test_signup_password_too_short(self, client):
         """Test signup with a password that is too short"""
         data = {
@@ -253,7 +234,7 @@ class Tests:
         response = client.post("/signup", data=data)
         assert response.status_code == 200
         assert b"Password must be between 8 and 20 characters long!" in response.data
-    
+
     def test_signup_password_too_long(self, client):
         """Test signup with a password that is too long"""
         data = {
@@ -265,7 +246,7 @@ class Tests:
         response = client.post("/signup", data=data)
         assert response.status_code == 200
         assert b"Password must be between 8 and 20 characters long!" in response.data
-    
+
     def test_signup_password_no_digit(self, client):
         """Test signup with a password that has no digits"""
         data = {
@@ -289,6 +270,26 @@ class Tests:
         response = client.post("/signup", data=data)
         assert response.status_code == 200
         assert b"Password should have at least one alphabet!" in response.data
+  
+    def test_login_user_logged_in(self, client):
+        """Test login route when user is logged in."""
+        with client.session_transaction() as session:
+            session["user_id"] = "some_user_id"
+
+        response = client.get("/login")
+
+        assert response.status_code == 302
+        assert '/' in response.headers['Location']
+
+    def test_login_user_not_logged_in(self, client):
+        """Test login route when user is not logged in."""
+        with client.session_transaction() as session:
+            session.pop("user_id", None)
+
+        response = client.get("/login")
+
+        assert response.status_code == 200
+        assert b"login.html" in response.data
 
     def test_login_auth_success(self, client):
         """Test successful login authentication."""
