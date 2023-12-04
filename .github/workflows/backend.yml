@@ -35,6 +35,8 @@ jobs:
           cd machine_learning_client/tests
           sudo apt-get install libsndfile1
           pipenv run python -m pytest
+        env: 
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
 
       - name: Coverage Report
         run: |
