@@ -1,8 +1,7 @@
 """Module for Testing Python Functions"""
+from unittest.mock import patch
 import pytest
 import mongomock
-from web_app import app
-from unittest.mock import patch
 
 class Tests1:
     """Test Functions for the Web App"""
@@ -20,9 +19,10 @@ class Tests1:
         assert actual == expected, "Expected True to be equal to True!"
 
     @pytest.fixture
-    def mock_app():
+    def mock_app(self):
         """Mocking the database to test functions."""
-        with patch('web_app.MongoClient', return_value=mongomock.MongoClient()):
+        with patch('pymongo.MongoClient', mongomock.MongoClient()):
+            from web_app import app
             app.config['TESTING'] = True
             yield app
 
