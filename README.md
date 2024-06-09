@@ -7,7 +7,7 @@
 
 Build a containerized app that uses machine learning. See [instructions](./instructions.md) for details.
 
-## [Live Demo](http://159.65.44.240:5001/)
+## ~~[Live Demo](`http://159.65.44.240:5001/`)~~ (Currently Unavaliable)
 If using Google Chrome, follow these steps to address microphone access issues in the live demo:
 
 1. **Open Chrome Flags**:
